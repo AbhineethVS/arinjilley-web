@@ -19,8 +19,8 @@
     // gpt-5-mini list prices (USD per million tokens, checked 17 Oct 2026), only used for /usage estimates.
     "AI_PRICE_INPUT_PER_M": "0.25",
     "AI_PRICE_OUTPUT_PER_M": "2.00",
-    // Public website (built in step 5) and the club's WhatsApp group, both used in the WhatsApp text.
-    "SITE_URL": "https://arinjilley.arinjilley-bot.workers.dev",
+    // Public website and the club's WhatsApp group, both used in the WhatsApp text.
+    "SITE_URL": "https://arinjilley.pages.dev",
     "GROUP_URL": "https://chat.whatsapp.com/HRgBh8m962qGtkhIbVu9WH"
   },
   // The bot calls itself to run slow steps as separate jobs (see src/jobs.ts).

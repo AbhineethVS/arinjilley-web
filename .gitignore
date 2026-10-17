@@ -19,4 +19,5 @@ packages/core/assets/fonts/fontshare/
 
 # website build output
 apps/web/public/fonts/
+apps/web/dist/
 apps/web/public/app.js

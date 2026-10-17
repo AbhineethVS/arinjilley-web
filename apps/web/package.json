@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "node build.mjs && wrangler pages dev",
+    "deploy": "node build.mjs && wrangler pages deploy --project-name arinjilley --branch main --commit-dirty=true",
     "types": "wrangler types",
     "typecheck": "tsc --noEmit"
   },

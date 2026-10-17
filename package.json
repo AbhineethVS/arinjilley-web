@@ -19,7 +19,8 @@
     "webhook:set": "node scripts/set-webhook.mjs",
     "test": "vitest run",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "biome check ."
+    "lint": "biome check .",
+    "deploy:web": "npm run deploy -w @arinjilley/web"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

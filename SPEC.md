@@ -209,7 +209,7 @@ Link previews (WhatsApp, etc.) use the **poster** as the image.
 | Language / repo | TypeScript, npm workspaces monorepo: `apps/bot`, `apps/web`, `packages/core`. GitHub: `AbhineethVS/arinjilley-web` |
 | Bot | Cloudflare Worker + **grammY**. Telegram webhook, plus a cron every minute for the queue and message merging |
 | Database | **Cloudflare D1** (SQLite) + **Drizzle** for queries and migrations |
-| Website + admin | A **plain Cloudflare Worker** (`apps/web`, name `arinjilley`) that renders HTML with string templates and reads D1. CSS, the bundled browser script (esbuild), fonts and the favicon are **Workers Static Assets**, served without running the Worker. Rendering code is shared between server and browser (`apps/web/shared`), so filters, search and the side panel re-render exactly like the first load. _Changed from Astro on 17 Oct: the free plan's ~10 ms CPU limit, plus no edge cache on `workers.dev`, favour minimal per-request work. Measured: 5 ms average, 16 ms max (cold start)._ |
+| Website + admin | **https://arinjilley.pages.dev**: classic **Cloudflare Pages** (project `arinjilley`) with the server code as `_worker.js` (same free limits as Workers; static files skip the Worker via `_routes.json`). _Moved from a `workers.dev` address on 17 Oct (it was `arinjilley.arinjilley-bot.workers.dev`); the old address 301-redirects (`apps/redirect`)._ The code (`apps/web`) renders HTML with string templates and reads D1. CSS, the bundled browser script (esbuild), fonts and the favicon are **Workers Static Assets**, served without running the Worker. Rendering code is shared between server and browser (`apps/web/shared`), so filters, search and the side panel re-render exactly like the first load. _Changed from Astro on 17 Oct: the free plan's ~10 ms CPU limit, plus no edge cache on `workers.dev`, favour minimal per-request work. Measured: 5 ms average, 16 ms max (cold start)._ |
 | Admin login | Telegram Login Widget, signature checked on the server, signed session cookie |
 | AI | **OpenAI `gpt-5-mini`** → rule-based fallback. Output validated with **Zod**. Rate-limited (§4) |
 | Reading links | Cloudflare's built-in HTMLRewriter (page title, description, image, text) |
@@ -217,7 +217,7 @@ Link previews (WhatsApp, etc.) use the **poster** as the image.
 | Images | Stored in **Telegram** (uploaded posters and generated ones). We keep the file ID of the full image and of a ~320px thumbnail, and serve them through `/img/...` with year-long browser caching. Only images belonging to live listings are served, so it isn't an open proxy. Generated posters on the site are drawn as HTML (no image download); the PNG is used for link previews (`og:image`). No R2 needed |
 | Fonts / icons | Sentient, General Sans, JetBrains Mono and the Phosphor icons we use, all self-hosted |
 | Tooling | Wrangler (local dev + deploy), Vitest, Biome |
-| Domain | `*.workers.dev` for free; optional custom domain (~₹800/yr) |
+| Domain | Site: `arinjilley.pages.dev` (free). Bot: `arinjilley-bot.arinjilley-bot.workers.dev` (internal only, never shown to members). Optional custom domain later (~₹800/yr) |
 | Secrets | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `OPENAI_API_KEY`, `SESSION_SECRET`: set with `wrangler secret put` or a git-ignored `.dev.vars` file, never committed
 
 **Poster rendering (tested 17 Oct):** generating PNGs inside the Worker exceeded the free CPU limit on every request, so posters are rendered by Cloudflare Browser Rendering instead. Free limits: 10 browser-minutes/day, 1 new browser per 20 s (sessions are reused for 60 s). If the daily limit is ever hit, the poster is retried later; listings still go live without waiting.
@@ -230,7 +230,7 @@ Automatic WhatsApp capture · reading text inside posters/PDFs · special handli
 2. ~~Project setup, database, bot answers `/start` + poster CPU test~~ ✅ 17 Oct
 3. ~~Queue, AI extraction, preview / edit / approve, admin commands~~ ✅ 17 Oct (+ rate limits, `/usage`)
 4. ~~Poster generator + WhatsApp text~~ ✅ 17 Oct (folded into step 3; poster speed-up left for step 7)
-5. ~~Public website from the mock-up (home, hackathon, archive, about, 404)~~ ✅ 17 Oct: https://arinjilley.arinjilley-bot.workers.dev
+5. ~~Public website from the mock-up (home, hackathon, archive, about, 404)~~ ✅ 17 Oct: https://arinjilley.pages.dev
 6. Admin page (Telegram login, dashboard, add/edit form, image upload, Fill with AI)
 7. Polish, test with real posts, onboard admins
 

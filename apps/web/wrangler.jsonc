@@ -1,17 +1,13 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  // The public website. Its address is <name>.<account subdomain>.workers.dev
+  // The public website, on Cloudflare Pages: https://arinjilley.pages.dev
+  // Build with `npm run build` (writes dist/), deploy with `npm run deploy`.
   "name": "arinjilley",
-  "main": "src/index.ts",
+  "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true },
-  // Fonts + bundled browser script, then the Worker.
-  "build": { "command": "node build.mjs", "watch_dir": ["client", "shared"] },
-  // CSS, JS, fonts and the favicon are served straight from here without running the Worker.
-  "assets": { "directory": "public", "binding": "ASSETS" },
   "vars": {
-    "SITE_URL": "https://arinjilley.arinjilley-bot.workers.dev",
+    "SITE_URL": "https://arinjilley.pages.dev",
     "GROUP_URL": "https://chat.whatsapp.com/HRgBh8m962qGtkhIbVu9WH"
   },
   // Same database as the bot (the site only reads live listings).
@@ -19,10 +15,7 @@
     {
       "binding": "DB",
       "database_name": "arinjilley",
-      "database_id": "81ff0986-2c48-4660-a128-c1dfd0cbca88",
-      "migrations_dir": "../../migrations",
-      // Local dev (wrangler dev) reads the real database, so the site shows real listings while developing.
-      "remote": true
+      "database_id": "81ff0986-2c48-4660-a128-c1dfd0cbca88"
     }
   ]
 }

@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  // Same name as the old website Worker, so it replaces it at the old address.
+  "name": "arinjilley",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01"
+}
