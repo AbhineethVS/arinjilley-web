@@ -1,5 +1,5 @@
 // Listing reads and writes shared by the bot and the admin page.
-import { and, eq, inArray, like, ne, or } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, ne } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { slugify } from "../format";
 import type { Hackathon } from "../types";
@@ -26,10 +26,12 @@ export async function getHackathonRow(d: DB, id: string) {
 /** A unique slug for a title: "colossus-3-0", then "colossus-3-0-2", … */
 export async function uniqueSlug(d: DB, title: string, exceptId?: string): Promise<string> {
   const base = slugify(title);
+  // `base` itself and every "base-…" slug, as an alphabetical range ("." sorts right after "-"). Not LIKE:
+  // D1 rejects LIKE patterns over 50 bytes, which long titles exceed.
   const rows = await d
     .select({ slug: hackathons.slug, id: hackathons.id })
     .from(hackathons)
-    .where(or(eq(hackathons.slug, base), like(hackathons.slug, `${base}-%`)))
+    .where(and(gte(hackathons.slug, base), lt(hackathons.slug, `${base}.`)))
     .all();
   const taken = new Set(rows.filter((r) => r.id !== exceptId).map((r) => r.slug));
   if (!taken.has(base)) return base;
