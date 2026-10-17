@@ -21,6 +21,7 @@ const REGULAR = [
   "caret-down",
   "caret-up",
   "copy",
+  "export",
   "globe-simple",
   "graduation-cap",
   "hourglass-medium",

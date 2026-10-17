@@ -1089,6 +1089,8 @@ button {
 .pscroll {
   flex: 1;
   overflow-y: auto;
+  /* Never scroll sideways, even if some text is too long. */
+  overflow-x: hidden;
   padding: 28px 28px 36px;
   overscroll-behavior: contain;
 }
@@ -1285,12 +1287,19 @@ button {
   padding-top: 3px;
   flex: none;
 }
+/* Themes wrap onto new lines; the dot sits at the end of a line, never at the start of the next one. */
 .tags {
+  display: flex;
+  flex-wrap: wrap;
   font-size: 15px;
   color: #d6d6db;
   line-height: 1.7;
+  min-width: 0;
 }
-.tags span + span::before {
+.tags span {
+  overflow-wrap: anywhere;
+}
+.tags span:not(:last-child)::after {
   content: "·";
   color: var(--t3);
   margin: 0 9px;
@@ -1535,4 +1544,100 @@ button {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* "Get the app" card (client/pwa.ts) */
+.install-card {
+  position: fixed;
+  z-index: 60;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: var(--raised);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  transform: translateY(calc(100% + 40px));
+  opacity: 0;
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.25s;
+}
+.install-card.on {
+  transform: none;
+  opacity: 1;
+}
+.install-card img {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  flex: none;
+}
+.ic-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ic-text b {
+  font-size: 15px;
+  font-weight: 600;
+}
+.ic-text span {
+  font-size: 13.5px;
+  color: var(--t2);
+  line-height: 1.45;
+}
+.ic-text .ios-share {
+  font-size: 16px;
+  vertical-align: -3px;
+  color: var(--t1);
+}
+.ic-actions {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+@media (min-width: 721px) {
+  .install-card {
+    left: auto;
+    right: 20px;
+    bottom: 20px;
+    width: 420px;
+  }
+}
+@media (max-width: 480px) {
+  .install-card {
+    flex-wrap: wrap;
+  }
+  .ic-text {
+    flex-basis: calc(100% - 58px);
+  }
+  .ic-actions {
+    width: 100%;
+  }
+  .ic-actions .btn {
+    flex: 1;
+    height: 40px;
+  }
+}
+
+/* Long words or links in the detail view wrap instead of pushing the layout sideways. */
+.pscroll,
+.page-detail {
+  overflow-wrap: anywhere;
+}
+.page-detail {
+  overflow-x: hidden;
+}
+.row > div:last-child,
+.psec,
+.cta,
+.d-by {
+  min-width: 0;
 }
