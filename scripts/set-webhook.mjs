@@ -7,13 +7,6 @@ const ADMIN_COMMANDS = [
   { command: "help", description: "What I can do" },
   { command: "whoami", description: "Show your Telegram ID and role" },
 ];
-const OWNER_COMMANDS = [
-  ...ADMIN_COMMANDS,
-  { command: "admins", description: "List admins" },
-  { command: "addadmin", description: "Add an admin: /addadmin <id> [name]" },
-  { command: "removeadmin", description: "Remove an admin: /removeadmin <id>" },
-];
-const OWNER_ID = 7204471811;
 
 const base = process.argv[2]?.replace(/\/+$/, "");
 if (!base || !/^https:\/\/.+/.test(base)) {
@@ -47,8 +40,7 @@ await call("setWebhook", {
 });
 console.log(`webhook  ${base}/telegram`);
 await call("setMyCommands", { commands: ADMIN_COMMANDS });
-await call("setMyCommands", { commands: OWNER_COMMANDS, scope: { type: "chat", chat_id: OWNER_ID } });
-console.log("commands registered (owner gets the admin-management ones too)");
+console.log("commands registered (the owner gets the admin-management ones on their first /start)");
 const info = await call("getWebhookInfo");
 console.log(
   `status   pending=${info.pending_update_count}${info.last_error_message ? ` last_error="${info.last_error_message}"` : ""}`,

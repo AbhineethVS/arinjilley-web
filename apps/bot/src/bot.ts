@@ -10,6 +10,16 @@ export interface BotContext extends Context {
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+/** Commands in the owner's Telegram menu (everyone else gets the default menu set by set-webhook.mjs). */
+const OWNER_COMMANDS = [
+  { command: "start", description: "Start / what this bot does" },
+  { command: "help", description: "What I can do" },
+  { command: "whoami", description: "Show your Telegram ID and role" },
+  { command: "admins", description: "List admins" },
+  { command: "addadmin", description: "Add an admin: /addadmin <id> [name]" },
+  { command: "removeadmin", description: "Remove an admin: /removeadmin <id>" },
+];
+
 export function createBot(env: Env): Bot<BotContext> {
   const db = drizzle(env.DB);
   const ownerId = Number(env.OWNER_TELEGRAM_ID);
@@ -65,6 +75,13 @@ export function createBot(env: Env): Bot<BotContext> {
 
   bot.command("start", async (ctx) => {
     const name = esc(ctx.from!.first_name);
+    // The owner's command menu includes admin management. Telegram only allows a per-chat menu once the
+    // person has messaged the bot, so it's set here rather than by scripts/set-webhook.mjs.
+    if (ctx.role === "owner") {
+      await ctx.api
+        .setMyCommands(OWNER_COMMANDS, { scope: { type: "chat", chat_id: ctx.chat.id } })
+        .catch((err) => console.error("setMyCommands failed", err));
+    }
     await ctx.reply(
       `Hi ${name}! You're ${ctx.role === "owner" ? "the <b>owner</b>" : "an <b>admin</b>"} of arinjilley?.\n\n${helpText(ctx.role)}`,
       { parse_mode: "HTML" },
