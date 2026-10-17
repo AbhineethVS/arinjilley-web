@@ -73,7 +73,9 @@ export function card(h: WebListing, now: number): string {
       : `${icon("map-pin")}<span>${esc(place || MODE_LABEL[h.mode])}</span>`;
   const fee = h.isFree ? "Free" : h.feeText && h.feeText.length <= 18 ? h.feeText : null;
   const facts = [
-    h.start ? `<span class="fact">${icon("calendar-blank")}${esc(dateRange(h.start, h.end))}</span>` : "",
+    h.start
+      ? `<span class="fact">${icon("calendar-blank")}<span class="fact-k">Event</span>${esc(dateRange(h.start, h.end))}</span>`
+      : "",
     h.teamMin != null || h.teamMax != null
       ? `<span class="fact">${icon("users")}${esc(teamText(h))}</span>`
       : "",
@@ -93,6 +95,8 @@ export function card(h: WebListing, now: number): string {
 }
 
 interface Group {
+  /** Small caption above the date, saying what the date means. */
+  kicker?: string;
   label: string;
   sub: string;
   today?: boolean;
@@ -119,6 +123,7 @@ export function upcomingGroups(list: WebListing[], now: number): Group[] {
     const k = istDayKey(at);
     if (!groups.has(k)) {
       groups.set(k, {
+        kicker: "Registration closes",
         label: k === todayK ? "Today" : dayMonth(at),
         sub: k === tomorrowK ? "Tomorrow" : WEEKDAYS[istParts(at).weekday]!,
         today: k === todayK,
@@ -152,7 +157,7 @@ export function timelineHtml(groups: Group[], now: number, emptyHtml: string): s
   return groups
     .map(
       (g) => `<section class="day${g.today ? " is-today" : ""}">
-  <div class="day-date"><div class="dd">${esc(g.label)}</div><div class="dw">${esc(g.sub)}</div></div>
+  <div class="day-date">${g.kicker ? `<div class="dk mono">${esc(g.kicker)}</div>` : ""}<div class="dd">${esc(g.label)}</div><div class="dw">${esc(g.sub)}</div></div>
   <div class="day-rail" aria-hidden="true"><span class="dot"></span></div>
   <div class="day-cards">${g.items.map((h) => card(h, now)).join("")}</div>
 </section>`,

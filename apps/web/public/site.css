@@ -799,6 +799,14 @@ button {
 .day-date {
   padding-top: 15px;
 }
+.dk {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--t3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
 .dd {
   font-weight: 600;
   font-size: 15px;
@@ -925,6 +933,10 @@ button {
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
+.fact-k {
+  color: var(--t3);
+  font-weight: 400;
+}
 .fact {
   display: inline-flex;
   align-items: center;
@@ -1001,9 +1013,13 @@ button {
   }
   .day-date {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: baseline;
     padding: 4px 0 10px;
+  }
+  .dk {
+    margin: 0 2px 0 0;
   }
   .day-cards {
     padding-bottom: 24px;
