@@ -1,0 +1,24 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "arinjilley-bot",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "vars": {
+    // Not a secret: the owner's Telegram user ID.
+    "OWNER_TELEGRAM_ID": "7204471811",
+    // Temporary: enables /_test/* routes used for the poster CPU check. Turned off after step 2.
+    "ENABLE_TEST_ROUTES": "1"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "arinjilley",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../../migrations"
+    }
+  ],
+  // Font files are imported as ArrayBuffers for the poster renderer.
+  "rules": [{ "type": "Data", "globs": ["**/*.woff", "**/*.ttf"], "fallthrough": true }]
+}

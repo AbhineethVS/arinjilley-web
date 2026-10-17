@@ -1,0 +1,19 @@
+{
+  "name": "@arinjilley/core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./db": "./src/db/schema.ts",
+    "./poster": "./src/poster/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "^2.6.2",
+    "drizzle-orm": "^0.45.4",
+    "satori": "0.32.0",
+    "zod": "^4.6.7"
+  }
+}

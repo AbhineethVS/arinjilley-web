@@ -1,0 +1,38 @@
+{
+  "name": "arinjilley",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/fetch-fonts.mjs",
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "dev:bot": "npm run dev -w @arinjilley/bot",
+    "deploy:bot": "npm run deploy -w @arinjilley/bot",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "npm run db:migrate:local -w @arinjilley/bot",
+    "db:migrate:remote": "npm run db:migrate:remote -w @arinjilley/bot",
+    "secrets:init": "node scripts/init-dev-vars.mjs",
+    "secrets:push": "node scripts/push-secrets.mjs",
+    "webhook:set": "node scripts/set-webhook.mjs",
+    "test": "vitest run",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "biome check ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@types/node": "^26.6.5",
+    "drizzle-kit": "^0.31.11",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.1"
+  },
+  "allowScripts": {
+    "workerd@1.20261012.1": true,
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
+  }
+}
