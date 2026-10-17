@@ -12,6 +12,13 @@
     // about half a US cent per listing. Change here if OpenAI's lineup changes.
     "OPENAI_MODEL": "gpt-5-mini",
     "OPENAI_REASONING": "minimal",
+    // AI rate limits (protect the OpenAI credit). The OpenAI dashboard budget is the final safety net.
+    "AI_LIMIT_PER_ADMIN_PER_HOUR": "15",
+    "AI_LIMIT_PER_DAY": "60",
+    "AI_MAX_INPUT_CHARS": "6000",
+    // gpt-5-mini list prices (USD per million tokens, checked 17 Oct 2026), only used for /usage estimates.
+    "AI_PRICE_INPUT_PER_M": "0.25",
+    "AI_PRICE_OUTPUT_PER_M": "2.00",
     // Public website (built in step 5) and the club's WhatsApp group, both used in the WhatsApp text.
     "SITE_URL": "https://arinjilley.arinjilley-bot.workers.dev",
     "GROUP_URL": "https://chat.whatsapp.com/HRgBh8m962qGtkhIbVu9WH"

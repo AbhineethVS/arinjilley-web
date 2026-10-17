@@ -23,6 +23,7 @@ import {
   updateHackathon,
 } from "./store";
 import { esc, ignoreNotModified } from "./telegram";
+import { usageReport } from "./usage";
 
 export type Role = "owner" | "admin" | null;
 export interface BotContext extends Context {
@@ -38,6 +39,7 @@ const OWNER_COMMANDS = [
   { command: "admins", description: "List admins" },
   { command: "addadmin", description: "Add an admin: /addadmin <id> [name]" },
   { command: "removeadmin", description: "Remove an admin: /removeadmin <id>" },
+  { command: "usage", description: "AI usage and estimated cost" },
 ];
 
 /** Messages within this window of each other go into the same batch (one listing). */
@@ -92,7 +94,12 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
       "/cancel: cancel an edit",
       "/whoami: your Telegram ID and role",
       ...(role === "owner"
-        ? ["", "<b>Owner only</b>", "/admins · /addadmin &lt;id&gt; [name] · /removeadmin &lt;id&gt;"]
+        ? [
+            "",
+            "<b>Owner only</b>",
+            "/admins · /addadmin &lt;id&gt; [name] · /removeadmin &lt;id&gt;",
+            "/usage: AI usage and estimated cost",
+          ]
         : []),
       "",
       "<i>Tip: to use your own poster for a listing, reply to its preview with the image.</i>",
@@ -123,6 +130,11 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
     const state = await getState(d, ctx.from!.id);
     await clearState(d, ctx.from!.id);
     await ctx.reply(state ? "Cancelled." : "Nothing to cancel.");
+  });
+
+  bot.command("usage", async (ctx) => {
+    if (ctx.role !== "owner") return ctx.reply("Only the owner can see AI usage.");
+    await ctx.reply(await usageReport(env, d), { parse_mode: "HTML" });
   });
 
   bot.command("events", async (ctx) => {
@@ -212,12 +224,14 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
     const answer = (text?: string) => ctx.answerCallbackQuery(text ? { text } : undefined).catch(() => {});
 
     // Batch actions
-    if (action === "go" || action === "force") {
+    if (action === "go" || action === "force" || action === "manual") {
       const batch = await getBatch(d, id);
       if (!batch) return answer("That message is no longer available.");
-      if (action === "force") await updateBatch(d, id, { force: true, status: "collecting" });
+      if (batch.status === "done" || batch.status === "processing") return answer("Already on it.");
+      // "Try again" after a limit, "make it a listing anyway", or "fill it in manually" reopen the batch.
+      await updateBatch(d, id, { status: "collecting", ...(action === "force" ? { force: true } : {}) });
       await answer("On it…");
-      later(kick(env, { type: "batch", id, now: true }));
+      later(kick(env, { type: "batch", id, now: true, manual: action === "manual" }));
       return;
     }
 

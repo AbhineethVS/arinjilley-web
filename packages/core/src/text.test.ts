@@ -168,29 +168,30 @@ describe("whatsappText", () => {
   };
   const links = { siteUrl: "https://arinjilley.example/", groupUrl: "https://chat.whatsapp.com/abc" };
 
-  it("matches the spec layout, without emojis", () => {
+  it("matches the spec layout, with template emojis only (none from the data)", () => {
     expect(whatsappText(h, links)).toBe(
       [
-        "*COLOSSUS 3.0 | 24-Hour Hackathon*",
+        "🚀 *COLOSSUS 3.0 | 24-Hour Hackathon*",
         "Dr. Ambedkar Institute of Technology, Bengaluru",
         "",
         "Build a real solution in 24 hours on campus, with mentors from industry and faculty.",
         "",
-        "*Registration closes:* Sun, 25 Oct, 11:59 PM",
-        "*Hackathon:* 13–14 Nov, offline at Dr. AIT, Bengaluru",
-        "*Team:* 2–4",
-        "*Who can join:* UG/PG students with a valid college ID",
-        "*Fee:* Round 1 free, ₹800 per team for finalists",
-        "*Prize pool:* ₹1 Lakh+",
-        "*Tracks:* AgriTech, FinTech",
+        "⏰ *Registration closes:* Sun, 25 Oct, 11:59 PM",
+        "📅 *Hackathon:* 13–14 Nov",
+        "📍 *Where:* In person at Dr. AIT, Bengaluru",
+        "👥 *Team:* 2–4",
+        "🎓 *Who can join:* UG/PG students with a valid college ID",
+        "💸 *Fee:* Round 1 free, ₹800 per team for finalists",
+        "🏆 *Prize pool:* ₹1 Lakh+",
+        "💡 *Tracks:* AgriTech, FinTech",
         "",
-        "*How it works*",
-        "1. Round 1 (online): submit your idea on the official template",
-        "2. Round 2: top 60 teams build",
+        "📝 *How it works*",
+        "1️⃣ Round 1 (online): submit your idea on the official template",
+        "2️⃣ Round 2: top 60 teams build",
         "",
-        "Register: https://www.colossus3.tech",
-        "Details: https://arinjilley.example/h/colossus-3-0",
-        "Join our group: https://chat.whatsapp.com/abc",
+        "🔗 *Register:* https://www.colossus3.tech",
+        "🌐 *Details:* https://arinjilley.example/h/colossus-3-0",
+        "📲 *Join our group:* https://chat.whatsapp.com/abc",
       ].join("\n"),
     );
   });
@@ -212,8 +213,8 @@ describe("whatsappText", () => {
       },
       links,
     );
-    expect(text).toContain("*Registration:* open until seats fill, so apply early");
-    expect(text).toContain("*Hackathon:* 13–14 Nov, online");
+    expect(text).toContain("⏳ *Registration:* open until seats fill, so apply early");
+    expect(text).toContain("📍 *Where:* Online");
     expect(text).not.toMatch(/Team:|Fee:|Prize pool:|Tracks:|How it works/);
   });
 });

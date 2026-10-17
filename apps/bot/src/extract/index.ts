@@ -10,7 +10,7 @@ import {
 } from "@arinjilley/core";
 import type { ListingFields } from "@arinjilley/core/db";
 import { z } from "zod";
-import { extractWithOpenAI, type RawExtraction } from "./openai";
+import { type AiUsage, extractWithOpenAI, type RawExtraction } from "./openai";
 import type { PageInfo } from "./page";
 
 export interface Extraction {
@@ -19,6 +19,8 @@ export interface Extraction {
   fields: ListingFields;
   source: "openai" | "rules";
   warnings: string[];
+  /** Set when OpenAI was called (even if it failed), so the call can be logged against the limits. */
+  ai?: { ok: boolean; usage: AiUsage };
 }
 
 const nullableText = z
@@ -191,18 +193,21 @@ export async function extractListing(
 ): Promise<Extraction> {
   const allUrls =
     input.page && !input.urls.includes(input.page.url) ? [...input.urls, input.page.url] : input.urls;
+  let usage: AiUsage = { promptTokens: 0, completionTokens: 0 };
   try {
-    const raw = await extractWithOpenAI(env, { ...input, urls: allUrls });
-    const { fields, warnings } = normalise(raw, allUrls, input.sentAt);
+    const result = await extractWithOpenAI(env, { ...input, urls: allUrls });
+    usage = result.usage;
+    const { fields, warnings } = normalise(result.raw, allUrls, input.sentAt);
     return {
-      isHackathon: raw.is_hackathon,
-      reason: raw.not_hackathon_reason,
+      isHackathon: result.raw.is_hackathon,
+      reason: result.raw.not_hackathon_reason,
       fields,
       source: "openai",
       warnings,
+      ai: { ok: true, usage },
     };
   } catch (err) {
     console.error("OpenAI extraction failed, using rules", err);
-    return extractWithRules(input.text, input.urls, input.sentAt);
+    return { ...extractWithRules(input.text, input.urls, input.sentAt), ai: { ok: false, usage } };
   }
 }

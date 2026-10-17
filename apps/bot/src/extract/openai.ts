@@ -3,6 +3,11 @@
 import { dayMonth, istParts, WEEKDAYS } from "@arinjilley/core";
 import type { PageInfo } from "./page";
 
+export interface AiUsage {
+  promptTokens: number;
+  completionTokens: number;
+}
+
 export interface RawExtraction {
   is_hackathon: boolean;
   not_hackathon_reason: string | null;
@@ -126,7 +131,10 @@ function pageBlock(page: PageInfo | null): string {
 export async function extractWithOpenAI(
   env: Env,
   input: { text: string; urls: string[]; sentAt: number; page: PageInfo | null },
-): Promise<RawExtraction> {
+): Promise<{ raw: RawExtraction; usage: AiUsage }> {
+  // Hard cap on what we send, so one huge message can't burn through credit.
+  const maxChars = Number(env.AI_MAX_INPUT_CHARS) || 6000;
+  const text = input.text.length > maxChars ? `${input.text.slice(0, maxChars)}\n[…cut]` : input.text;
   const body = {
     model: env.OPENAI_MODEL,
     reasoning_effort: env.OPENAI_REASONING,
@@ -139,7 +147,7 @@ export async function extractWithOpenAI(
       { role: "developer", content: instructions(input.sentAt) },
       {
         role: "user",
-        content: `POST:\n"""\n${input.text}\n"""\n\nURLS:\n${input.urls.length ? input.urls.map((u) => `- ${u}`).join("\n") : "(none)"}${pageBlock(input.page)}`,
+        content: `POST:\n"""\n${text}\n"""\n\nURLS:\n${input.urls.length ? input.urls.map((u) => `- ${u}`).join("\n") : "(none)"}${pageBlock(input.page)}`,
       },
     ],
   };
@@ -155,10 +163,15 @@ export async function extractWithOpenAI(
   }
   const json = (await res.json()) as {
     choices?: { message?: { content?: string | null; refusal?: string | null }; finish_reason?: string }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+  };
+  const usage: AiUsage = {
+    promptTokens: json.usage?.prompt_tokens ?? 0,
+    completionTokens: json.usage?.completion_tokens ?? 0,
   };
   const choice = json.choices?.[0];
   if (choice?.message?.refusal) throw new Error(`OpenAI refused: ${choice.message.refusal}`);
   const content = choice?.message?.content;
   if (!content) throw new Error(`OpenAI returned no content (finish_reason: ${choice?.finish_reason})`);
-  return JSON.parse(content) as RawExtraction;
+  return { raw: JSON.parse(content) as RawExtraction, usage };
 }

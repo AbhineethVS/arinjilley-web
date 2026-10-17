@@ -15,6 +15,13 @@
       "when": 1792248598098,
       "tag": "0001_inbox_and_previews",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792250027409,
+      "tag": "0002_ai_calls",
+      "breakpoints": true
     }
   ]
 }

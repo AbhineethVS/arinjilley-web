@@ -119,6 +119,21 @@ export const adminState = sqliteTable("admin_state", {
   updatedAt: integer("updated_at").notNull().default(now),
 });
 
+/** Every OpenAI call, for rate limits (SPEC §4) and the /usage command. */
+export const aiCalls = sqliteTable(
+  "ai_calls",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    adminId: integer("admin_id").notNull(),
+    model: text("model").notNull(),
+    ok: integer("ok", { mode: "boolean" }).notNull(),
+    promptTokens: integer("prompt_tokens").notNull().default(0),
+    completionTokens: integer("completion_tokens").notNull().default(0),
+    createdAt: integer("created_at").notNull().default(now),
+  },
+  (t) => [index("ai_calls_created").on(t.createdAt), index("ai_calls_admin").on(t.adminId, t.createdAt)],
+);
+
 export type AdminRow = typeof admins.$inferSelect;
 export type InboxBatchRow = typeof inboxBatches.$inferSelect;
 export type AdminStateRow = typeof adminState.$inferSelect;

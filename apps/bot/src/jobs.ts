@@ -16,11 +16,14 @@ import {
   updateBatch,
 } from "./store";
 import { api, esc, ignoreNotModified } from "./telegram";
+import { checkAiLimit, recordAiCall } from "./usage";
 
 /** How long to wait after the last message before reading a batch (so a link + its text become one listing). */
 export const QUIET_MS = 12_000;
 
-export type Job = { type: "batch"; id: string; now?: boolean } | { type: "poster"; id: string };
+export type Job =
+  | { type: "batch"; id: string; now?: boolean; manual?: boolean }
+  | { type: "poster"; id: string };
 
 const INTERNAL_PATH = "https://internal/_internal/job";
 
@@ -44,7 +47,7 @@ export function isInternalJobRequest(request: Request, env: Env): boolean {
 
 export async function runJob(env: Env, job: Job): Promise<void> {
   try {
-    if (job.type === "batch") await processBatch(env, job.id, job.now ?? false);
+    if (job.type === "batch") await processBatch(env, job.id, job.now ?? false, job.manual ?? false);
     else await renderPosterJob(env, job.id);
   } catch (err) {
     console.error(`job ${job.type} ${job.id} failed`, err);
@@ -68,8 +71,8 @@ async function editAck(
   else await tg.sendMessage(chatId, text, options);
 }
 
-/** Batch → draft listing → preview card (+ poster job). */
-export async function processBatch(env: Env, id: string, now: boolean): Promise<void> {
+/** Batch → draft listing → preview card (+ poster job). `manual` creates the draft without the AI. */
+export async function processBatch(env: Env, id: string, now: boolean, manual = false): Promise<void> {
   const d = db(env);
   const batch = await claimBatch(d, id, now ? Number.MAX_SAFE_INTEGER : Date.now() - QUIET_MS + 1000);
   if (!batch) return; // more messages arrived (a later kick will handle it), or already processed
@@ -98,14 +101,25 @@ export async function processBatch(env: Env, id: string, now: boolean): Promise<
       }
     }
 
-    await editAck(
-      env,
-      batch.chatId,
-      batch.ackMessageId,
-      "Reading it… <i>(the AI usually takes 5–15 seconds)</i>",
-    );
+    // "Fill it in manually" (or an image with no text) skips the AI entirely.
+    const useAi = !!text && !manual;
+    if (useAi) {
+      const limit = await checkAiLimit(env, d, batch.adminId);
+      if (!limit.ok) {
+        await updateBatch(d, id, { status: "rejected" });
+        await editAck(
+          env,
+          batch.chatId,
+          batch.ackMessageId,
+          `⏳ <b>AI limit reached.</b> ${esc(limit.message)}\n\nYou can try again later, or create the draft without the AI and fill in the details yourself.`,
+          new InlineKeyboard().text("Try again", `go:${id}`).text("Fill it in manually", `manual:${id}`),
+        );
+        return;
+      }
+      await editAck(env, batch.chatId, batch.ackMessageId, "Reading it… <i>(usually takes 5–15 seconds)</i>");
+    }
 
-    const extraction = text
+    const extraction = useAi
       ? await extractListing(env, {
           text,
           urls,
@@ -113,11 +127,16 @@ export async function processBatch(env: Env, id: string, now: boolean): Promise<
           page: substantiveLength(text) < 280 && urls[0] ? await fetchPageInfo(urls[0]) : null,
         })
       : {
-          ...extractWithRules("", [], batch.firstMessageAt),
-          warnings: ["Image only: fill in the details with Edit."],
+          ...extractWithRules(text, urls, batch.firstMessageAt),
+          warnings: [
+            text
+              ? "Created without the AI: fill in the details with Edit."
+              : "Image only: fill in the details with Edit.",
+          ],
         };
+    if (extraction.ai) await recordAiCall(env, d, batch.adminId, extraction.ai.ok, extraction.ai.usage);
 
-    if (!extraction.isHackathon && !batch.force && !batch.photoFileId) {
+    if (!extraction.isHackathon && !batch.force && !manual && !batch.photoFileId) {
       await updateBatch(d, id, { status: "rejected" });
       await editAck(
         env,

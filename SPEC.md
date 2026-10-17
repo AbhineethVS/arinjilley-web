@@ -58,13 +58,11 @@ Owner only: `/addadmin` · `/removeadmin` · `/admins`
 ## 4. Extracting details
 
 1. **Clean**: remove phone numbers, other groups' WhatsApp links, sender names, "join our group" footers.
-2. **AI extraction** into a fixed set of fields (§5) with **OpenAI**, using the cheapest current "nano"-class model (e.g. `gpt-5-nano`, roughly $0.05 / $0.40 per million input/output tokens as of Sep 2026; confirmed against OpenAI's pricing page at build time). The model name is a single setting, so switching is a one-line change. Structured JSON output, checked against a schema.
-   - Cost: roughly 3K tokens per message, about **$0.0005 per hackathon**. Even 50 a day stays under $1/month.
-   - Fallback if OpenAI fails or the credit runs out: **Cloudflare Workers AI** (free, built in).
-3. **Rule fallback** if both fail: reads the emoji labels the club already uses (📅 📍 ⏰ 👥 💸 🏆 🔗) + a date library.
+2. **AI extraction** into a fixed set of fields (§5) with **OpenAI `gpt-5-mini`** (reasoning "minimal"), chosen on 17 Oct after side-by-side tests on real posts: `gpt-5-nano` got 12-hour times, free/paid and title capitalisation wrong. Price $0.25 / $2.00 per million input/output tokens, so roughly **$0.002 per hackathon**. Structured JSON output (strict schema), validated with Zod. The model is a single setting.
+3. **Rule fallback** if the AI call fails: title, link, mode, free/paid and a deadline if one is clearly labelled. The preview says the AI was unavailable.
 4. **Dates** are read in **IST**, relative to when the message was sent. Every date is shown in full in the preview (_"Sun 25 Oct, 11:59 PM"_) so a person checks it before anything goes live.
-5. A **queue** handles bursts (e.g. 20 messages at once) and retries failures.
-6. A **monthly spending cap** is set in the OpenAI dashboard as a safety net.
+5. **Batches and jobs**: messages sent within ~12 s become one listing ("Read it now" skips the wait). Slow steps run as self-invoked background jobs, and a per-minute cron retries anything missed.
+6. **AI rate limits** (settings in `wrangler.jsonc`): **15 AI reads per admin per hour** and **60 per day for everyone** (rolling windows), with input capped at 6,000 characters. When a limit is hit, the bot offers **Try again** or **Fill it in manually** (no AI). Every call is logged (tokens), and the owner's **`/usage`** shows calls, tokens and estimated cost. The monthly budget in the OpenAI dashboard is the final safety net.
 
 ## 5. Data: one hackathon
 
@@ -89,31 +87,34 @@ Owner only: `/addadmin` · `/removeadmin` · `/admins`
 | status | draft / live / discarded | |
 | created_by, timestamps | | admin's Telegram ID only |
 
-## 6. WhatsApp text template (no emojis)
+## 6. WhatsApp text template (fixed emojis)
+
+_Changed 17 Oct: the user asked for emojis because the plain version looked blank. Emojis come from this fixed template (one per line, in the club's existing style), never from the AI, so every post is consistent and it costs nothing extra._
 
 ```
-*COLOSSUS 3.0 | 24-Hour Hackathon*
+🚀 *COLOSSUS 3.0*
 Dr. Ambedkar Institute of Technology, Bengaluru
 
 Build a real solution in 24 hours on campus, with mentors from industry and faculty.
 
-*Registration closes:* Sun 25 Oct, 11:59 PM
-*Hackathon:* 13–14 Nov, offline at Dr. AIT, Bengaluru
-*Team:* 2–4 (inter-college allowed)
-*Who can join:* UG/PG students with a valid college ID
-*Fee:* Round 1 free, ₹800 per team for finalists
-*Prize pool:* ₹1 Lakh+
-*Tracks:* AgriTech, FinTech, Cybersecurity, HealthTech, Hardware/IoT, Open Innovation
+⏰ *Registration closes:* Sun, 25 Oct, 11:59 PM
+📅 *Hackathon:* 13–14 Nov
+📍 *Where:* In person at Dr. AIT, Bengaluru
+👥 *Team:* 2–4
+🎓 *Who can join:* UG/PG students with a valid college ID
+💸 *Fee:* Round 1 free, ₹800 per team for finalists
+🏆 *Prize pool:* ₹1 Lakh+
+💡 *Tracks:* AgriTech, FinTech, Cybersecurity, HealthTech
 
-*How it works*
-1. Round 1 (online): submit your idea on the official template (max 6 slides)
-2. Round 2 (offline, 24 hrs): top 60 teams build and pitch with a live demo
+📝 *How it works*
+1️⃣ Round 1 (online): submit your idea on the official template (max 6 slides)
+2️⃣ Round 2 (offline, 24 hrs): top 60 teams build and pitch with a live demo
 
-Register: https://www.colossus3.tech
-Details: <site>/h/colossus-3
-Join our group: <WhatsApp group link>
+🔗 *Register:* https://www.colossus3.tech
+🌐 *Details:* <site>/h/colossus-3-0
+📲 *Join our group:* <WhatsApp group link>
 ```
-Lines with no data are left out. Only WhatsApp formatting (`*bold*`) is used.
+Lines with no data are left out. Rolling listings show "⏳ *Registration:* open until seats fill, so apply early". Emojis inside the listing data are stripped, so only the template's emojis appear.
 
 ## 7. Poster generator
 
