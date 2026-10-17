@@ -178,6 +178,7 @@ Link previews (WhatsApp, etc.) use the **poster** as the image.
 - **Two installable apps**: the public site (`/manifest.webmanifest`, “arinjilley?”, shortcuts to Archive and About) and the admin page (`/admin.webmanifest`, “arinjilley? admin”, scope `/admin`, shortcuts to New hackathon and Drafts). Each has its own icons (`apps/web/public/icons/`, “a?” in Sentient with a lime “?”; the admin icon adds “ADMIN”).
 - **Service worker** (`apps/web/sw/sw.ts` → `/sw.js`): pages are network-first, falling back to the last saved copy after 4 s or offline, else a built-in offline page. Fonts, CSS, JS and icons are cache-first, and CSS/JS URLs carry a per-build ID so deploys are picked up. Poster images are cache-first (120 max). `/admin` is never cached.
 - An “Install app” button shows only where the browser supports it (Chrome, Edge, Android); the About page explains iPhone (Share → Add to Home Screen). The site shows a notice when you're offline.
+- **"Get the app" card**: after **10 seconds** of the page being open and visible (adding up across pages in the same tab), a small card slides up from the bottom. On Android/desktop its Install button opens the browser's own install dialog; on iPhone it shows the two Safari steps. It never shows inside the installed app or after installing, and "Not now" hides it for 14 days.
 - Gotcha: Cloudflare Pages redirects `*.html` to pretty URLs, so the offline page (`apps/web/sw/offline.html`) is built into `sw.js` instead of being a separate file.
 
 ### 8.7 Logo (18 Oct)

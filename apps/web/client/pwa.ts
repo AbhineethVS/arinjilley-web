@@ -1,7 +1,7 @@
 // Installable app + offline support, shared by the public site and the admin page.
 //
 // Install prompt: browsers only open their own install dialog after the visitor taps something, so after
-// ~25 seconds of active use we slide up a small "Get the app" card. Its Install button opens Chrome/Edge's
+// ~10 seconds of active use we slide up a small "Get the app" card. Its Install button opens Chrome/Edge's
 // native dialog (Android, desktop). iPhone has no install API, so there the card shows the two Safari steps.
 // The card never shows inside the installed app, after installing, or for 14 days after "Not now".
 import { icon } from "../shared/render";
@@ -11,7 +11,7 @@ interface InstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const ENGAGED_MS = 25_000; // active time before the card appears
+const ENGAGED_MS = 10_000; // active time before the card appears
 const SNOOZE_MS = 14 * 86_400_000; // "Not now" hides it for two weeks
 const KEY_ENGAGED = "arj-engaged-ms"; // per tab session, so it adds up across page loads
 const KEY_SNOOZED = "arj-install-snoozed";
