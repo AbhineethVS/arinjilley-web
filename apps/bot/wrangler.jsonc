@@ -6,11 +6,20 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
   "vars": {
-    // Not a secret: the owner's Telegram user ID.
+    // Not secrets.
     "OWNER_TELEGRAM_ID": "7204471811",
-    // Temporary: enables /_test/* routes used for the poster CPU check. Turned off after step 2.
-    "ENABLE_TEST_ROUTES": "1"
+    // gpt-5-mini was clearly more accurate than gpt-5-nano on real posts (dates, free/paid, titles) at
+    // about half a US cent per listing. Change here if OpenAI's lineup changes.
+    "OPENAI_MODEL": "gpt-5-mini",
+    "OPENAI_REASONING": "minimal",
+    // Public website (built in step 5) and the club's WhatsApp group, both used in the WhatsApp text.
+    "SITE_URL": "https://arinjilley.arinjilley-bot.workers.dev",
+    "GROUP_URL": "https://chat.whatsapp.com/HRgBh8m962qGtkhIbVu9WH"
   },
+  // The bot calls itself to run slow steps as separate jobs (see src/jobs.ts).
+  "services": [{ "binding": "SELF", "service": "arinjilley-bot" }],
+  // Every minute: retry anything that was missed (stuck batches, posters waiting for a free browser).
+  "triggers": { "crons": ["* * * * *"] },
   "d1_databases": [
     {
       "binding": "DB",

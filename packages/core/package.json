@@ -4,7 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./db": "./src/db/schema.ts",
+    "./db": "./src/db/index.ts",
     "./poster": "./src/poster/index.ts"
   },
   "scripts": {

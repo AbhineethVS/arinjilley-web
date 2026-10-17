@@ -17,7 +17,6 @@
   },
   "linter": {
     "rules": {
-      "recommended": true,
       "style": {
         "noNonNullAssertion": "off"
       }

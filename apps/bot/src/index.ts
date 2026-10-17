@@ -1,47 +1,65 @@
-import { type Bot, webhookCallback } from "grammy";
-import { type BotContext, createBot } from "./bot";
-import { RenderBusyError, renderPosterPng } from "./render";
-import { SAMPLES } from "./samples";
+import type { UserFromGetMe } from "grammy/types";
+import { createBot } from "./bot";
+import { isInternalJobRequest, type Job, runJob, sweep } from "./jobs";
+import { api } from "./telegram";
 
-// One bot instance per Worker isolate (grammY fetches the bot's info once, then reuses it).
-let cached: { token: string; bot: Bot<BotContext> } | null = null;
-function getBot(env: Env): Bot<BotContext> {
-  if (!cached || cached.token !== env.TELEGRAM_BOT_TOKEN) {
-    cached = { token: env.TELEGRAM_BOT_TOKEN, bot: createBot(env) };
+// The bot's own Telegram profile, fetched once per Worker isolate.
+let botInfo: { token: string; info: UserFromGetMe } | null = null;
+async function getBotInfo(env: Env): Promise<UserFromGetMe> {
+  if (!botInfo || botInfo.token !== env.TELEGRAM_BOT_TOKEN) {
+    botInfo = { token: env.TELEGRAM_BOT_TOKEN, info: await api(env).getMe() };
   }
-  return cached.bot;
+  return botInfo.info;
+}
+
+/** Constant-time comparison, so the secret can't be guessed from response timing. */
+function sameSecret(a: string | null, b: string): boolean {
+  if (!a) return false;
+  const enc = new TextEncoder();
+  const x = enc.encode(a);
+  const y = enc.encode(b);
+  return x.byteLength === y.byteLength && crypto.subtle.timingSafeEqual(x, y);
+}
+
+async function handleTelegram(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  if (!sameSecret(request.headers.get("x-telegram-bot-api-secret-token"), env.TELEGRAM_WEBHOOK_SECRET)) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  const update = await request.json();
+  const bot = createBot(env, ctx, await getBotInfo(env));
+  try {
+    // Handlers only do quick work; slow steps run in the background, so Telegram gets a fast reply.
+    await bot.handleUpdate(update as Parameters<typeof bot.handleUpdate>[0]);
+  } catch (err) {
+    console.error("update failed", err);
+  }
+  // Always 200: otherwise Telegram keeps re-sending the same update.
+  return new Response("ok");
 }
 
 export default {
-  async fetch(request, env): Promise<Response> {
+  async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname === "/telegram" && request.method === "POST") {
       if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_WEBHOOK_SECRET) {
         return new Response("Bot is not configured yet", { status: 503 });
       }
-      // grammY rejects requests without Telegram's secret header, so only Telegram can call this.
-      return webhookCallback(getBot(env), "cloudflare-mod", { secretToken: env.TELEGRAM_WEBHOOK_SECRET })(
-        request,
-      );
+      return handleTelegram(request, env, ctx);
     }
 
-    // Temporary route for the step-2 poster CPU check. Disabled by setting ENABLE_TEST_ROUTES to "0".
-    if (url.pathname === "/_test/poster" && env.ENABLE_TEST_ROUTES === "1") {
-      const sample = SAMPLES[url.searchParams.get("sample") ?? "colossus"] ?? SAMPLES.colossus!;
-      const style = url.searchParams.has("style")
-        ? Number(url.searchParams.get("style"))
-        : sample.posterStyle;
-      try {
-        const png = await renderPosterPng(env, { ...sample, posterStyle: style });
-        return new Response(png, { headers: { "content-type": "image/png", "cache-control": "no-store" } });
-      } catch (err) {
-        if (err instanceof RenderBusyError) return new Response(err.message, { status: 429 });
-        throw err;
-      }
+    // Background jobs, started by the Worker itself through the SELF binding (see jobs.ts).
+    if (isInternalJobRequest(request, env)) {
+      const job = (await request.json()) as Job;
+      ctx.waitUntil(runJob(env, job));
+      return new Response(null, { status: 202 });
     }
 
     if (url.pathname === "/") return new Response("arinjilley? bot is running.\n");
     return new Response("Not found\n", { status: 404 });
+  },
+
+  async scheduled(_event, env, ctx): Promise<void> {
+    await sweep(env, ctx);
   },
 } satisfies ExportedHandler<Env>;

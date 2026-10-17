@@ -3,8 +3,9 @@
 import { PLACEHOLDER, readDevVars } from "./init-dev-vars.mjs";
 
 const ADMIN_COMMANDS = [
-  { command: "start", description: "Start / what this bot does" },
-  { command: "help", description: "What I can do" },
+  { command: "events", description: "Recent listings (open, edit, publish)" },
+  { command: "help", description: "How to use this bot" },
+  { command: "cancel", description: "Cancel the current edit" },
   { command: "whoami", description: "Show your Telegram ID and role" },
 ];
 

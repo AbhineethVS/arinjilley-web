@@ -60,6 +60,16 @@ export const hackathons = sqliteTable(
     posterStyle: integer("poster_style").notNull().default(0),
     posterFileId: text("poster_file_id"),
 
+    posterStatus: text("poster_status", { enum: ["pending", "ready", "failed"] })
+      .notNull()
+      .default("pending"),
+
+    // Where the bot last showed this listing's preview, so edits can update it in place.
+    previewChatId: integer("preview_chat_id"),
+    previewTextMessageId: integer("preview_text_message_id"),
+    previewPhotoMessageId: integer("preview_photo_message_id"),
+
+    extractedBy: text("extracted_by", { enum: ["openai", "workers-ai", "rules", "manual"] }),
     sourceText: text("source_text"), // original message, cleaned (no phone numbers), kept for re-processing
     createdBy: integer("created_by"),
     createdAt: integer("created_at").notNull().default(now),
@@ -69,6 +79,48 @@ export const hackathons = sqliteTable(
   (t) => [index("hackathons_status_deadline").on(t.status, t.deadlineAt)],
 );
 
+/**
+ * Messages an admin sends in quick succession are merged into one batch (e.g. a link, then its description),
+ * which becomes one draft listing.
+ */
+export const inboxBatches = sqliteTable(
+  "inbox_batches",
+  {
+    id: text("id").primaryKey(),
+    adminId: integer("admin_id").notNull(),
+    chatId: integer("chat_id").notNull(),
+    status: text("status", { enum: ["collecting", "processing", "done", "rejected", "failed"] })
+      .notNull()
+      .default("collecting"),
+    text: text("text").notNull().default(""),
+    photoFileId: text("photo_file_id"),
+    ackMessageId: integer("ack_message_id"),
+    force: integer("force", { mode: "boolean" }).notNull().default(false), // "make it a listing anyway"
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
+    hackathonId: text("hackathon_id"),
+    firstMessageAt: integer("first_message_at").notNull(),
+    lastMessageAt: integer("last_message_at").notNull(),
+    updatedAt: integer("updated_at").notNull().default(now),
+  },
+  (t) => [
+    index("inbox_batches_status").on(t.status, t.lastMessageAt),
+    index("inbox_batches_admin").on(t.adminId),
+  ],
+);
+
+/** What the bot is waiting for from an admin, e.g. the new value of a field they chose to edit. */
+export const adminState = sqliteTable("admin_state", {
+  telegramId: integer("telegram_id").primaryKey(),
+  action: text("action", { enum: ["edit_field", "await_image"] }).notNull(),
+  hackathonId: text("hackathon_id").notNull(),
+  field: text("field"),
+  promptMessageId: integer("prompt_message_id"),
+  updatedAt: integer("updated_at").notNull().default(now),
+});
+
 export type AdminRow = typeof admins.$inferSelect;
+export type InboxBatchRow = typeof inboxBatches.$inferSelect;
+export type AdminStateRow = typeof adminState.$inferSelect;
 export type HackathonRow = typeof hackathons.$inferSelect;
 export type NewHackathonRow = typeof hackathons.$inferInsert;
