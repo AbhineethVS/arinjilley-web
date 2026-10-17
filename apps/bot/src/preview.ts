@@ -14,7 +14,7 @@ import {
 import { InlineKeyboard, InputFile } from "grammy";
 import { RenderBusyError, renderPosterPng } from "./render";
 import { type DB, db, getHackathon, getHackathonRow, updateHackathon } from "./store";
-import { api, esc, ignoreNotModified } from "./telegram";
+import { api, esc, ignoreNotModified, photoIds } from "./telegram";
 
 const dash = "<i>not set</i>";
 
@@ -178,7 +178,7 @@ export async function renderPosterJob(env: Env, id: string): Promise<void> {
 
   const tg = api(env);
   const file = new InputFile(png, `${h.slug}.png`);
-  let fileId: string | undefined;
+  let ids: { full: string; thumb: string } | null = null;
   let photoMessageId = row.previewPhotoMessageId;
   if (row.previewChatId && row.previewPhotoMessageId) {
     const edited = await tg
@@ -191,22 +191,23 @@ export async function renderPosterJob(env: Env, id: string): Promise<void> {
         console.error("editMessageMedia failed; sending a new photo", err);
         return null;
       });
-    if (edited && edited !== true) fileId = edited.photo?.at(-1)?.file_id;
+    if (edited && edited !== true) ids = photoIds(edited.photo);
     else photoMessageId = null;
   }
-  if (!fileId && row.previewChatId) {
+  if (!ids && row.previewChatId) {
     const sent = await tg.sendPhoto(row.previewChatId, new InputFile(png, `${h.slug}.png`), {
       caption: posterCaption(h),
       reply_parameters: row.previewTextMessageId
         ? { message_id: row.previewTextMessageId, allow_sending_without_reply: true }
         : undefined,
     });
-    fileId = sent.photo.at(-1)?.file_id;
+    ids = photoIds(sent.photo);
     photoMessageId = sent.message_id;
   }
   await updateHackathon(d, id, {
-    posterFileId: fileId ?? null,
-    posterStatus: fileId ? "ready" : "failed",
+    posterFileId: ids?.full ?? null,
+    posterThumbFileId: ids?.thumb ?? null,
+    posterStatus: ids ? "ready" : "failed",
     previewPhotoMessageId: photoMessageId,
   });
 }

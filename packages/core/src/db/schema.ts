@@ -59,6 +59,8 @@ export const hackathons = sqliteTable(
       .default("generated"),
     posterStyle: integer("poster_style").notNull().default(0),
     posterFileId: text("poster_file_id"),
+    // A smaller size of the same Telegram photo (~320px wide), for website thumbnails.
+    posterThumbFileId: text("poster_thumb_file_id"),
 
     posterStatus: text("poster_status", { enum: ["pending", "ready", "failed"] })
       .notNull()
@@ -94,6 +96,7 @@ export const inboxBatches = sqliteTable(
       .default("collecting"),
     text: text("text").notNull().default(""),
     photoFileId: text("photo_file_id"),
+    photoThumbFileId: text("photo_thumb_file_id"),
     ackMessageId: integer("ack_message_id"),
     force: integer("force", { mode: "boolean" }).notNull().default(false), // "make it a listing anyway"
     attempts: integer("attempts").notNull().default(0),

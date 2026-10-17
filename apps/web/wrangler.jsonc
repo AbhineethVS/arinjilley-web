@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  // The public website. Its address is <name>.<account subdomain>.workers.dev
+  "name": "arinjilley",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // Fonts + bundled browser script, then the Worker.
+  "build": { "command": "node build.mjs", "watch_dir": ["client", "shared"] },
+  // CSS, JS, fonts and the favicon are served straight from here without running the Worker.
+  "assets": { "directory": "public", "binding": "ASSETS" },
+  "vars": {
+    "SITE_URL": "https://arinjilley.arinjilley-bot.workers.dev",
+    "GROUP_URL": "https://chat.whatsapp.com/HRgBh8m962qGtkhIbVu9WH"
+  },
+  // Same database as the bot (the site only reads live listings).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "arinjilley",
+      "database_id": "81ff0986-2c48-4660-a128-c1dfd0cbca88",
+      "migrations_dir": "../../migrations",
+      // Local dev (wrangler dev) reads the real database, so the site shows real listings while developing.
+      "remote": true
+    }
+  ]
+}

@@ -209,12 +209,12 @@ Link previews (WhatsApp, etc.) use the **poster** as the image.
 | Language / repo | TypeScript, npm workspaces monorepo: `apps/bot`, `apps/web`, `packages/core`. GitHub: `AbhineethVS/arinjilley-web` |
 | Bot | Cloudflare Worker + **grammY**. Telegram webhook, plus a cron every minute for the queue and message merging |
 | Database | **Cloudflare D1** (SQLite) + **Drizzle** for queries and migrations |
-| Website + admin | **Astro**, server-rendered on a Cloudflare Worker, reading D1, edge-cached. No React. Interactive bits are small scripts |
+| Website + admin | A **plain Cloudflare Worker** (`apps/web`, name `arinjilley`) that renders HTML with string templates and reads D1. CSS, the bundled browser script (esbuild), fonts and the favicon are **Workers Static Assets**, served without running the Worker. Rendering code is shared between server and browser (`apps/web/shared`), so filters, search and the side panel re-render exactly like the first load. _Changed from Astro on 17 Oct: the free plan's ~10 ms CPU limit, plus no edge cache on `workers.dev`, favour minimal per-request work. Measured: 5 ms average, 16 ms max (cold start)._ |
 | Admin login | Telegram Login Widget, signature checked on the server, signed session cookie |
-| AI | **OpenAI** (cheapest nano-class model) → Cloudflare Workers AI → rules (chrono-node). Output validated with **Zod** |
+| AI | **OpenAI `gpt-5-mini`** → rule-based fallback. Output validated with **Zod**. Rate-limited (§4) |
 | Reading links | Cloudflare's built-in HTMLRewriter (page title, description, image, text) |
 | Posters | The boarding-pass poster is an HTML/CSS page (same code as the mock-up), screenshotted by **Cloudflare Browser Rendering** (free: 10 browser-minutes/day, about 7–15 s per poster). Rendering inside the Worker (Satori + resvg) was tested and exceeds the free plan's 10 ms CPU limit (error 1102) |
-| Images | Stored in **Telegram** (uploaded posters and generated ones). We keep the file ID and serve images through our own `/img/...` link with long caching. No R2 needed |
+| Images | Stored in **Telegram** (uploaded posters and generated ones). We keep the file ID of the full image and of a ~320px thumbnail, and serve them through `/img/...` with year-long browser caching. Only images belonging to live listings are served, so it isn't an open proxy. Generated posters on the site are drawn as HTML (no image download); the PNG is used for link previews (`og:image`). No R2 needed |
 | Fonts / icons | Sentient, General Sans, JetBrains Mono and the Phosphor icons we use, all self-hosted |
 | Tooling | Wrangler (local dev + deploy), Vitest, Biome |
 | Domain | `*.workers.dev` for free; optional custom domain (~₹800/yr) |
@@ -227,13 +227,14 @@ Automatic WhatsApp capture · reading text inside posters/PDFs · special handli
 
 ## 13. Build order
 1. ~~Clickable design mock-up~~ ✅ approved 17 Oct
-2. Project setup, database, bot answers `/start` (deployed) + **poster CPU test**
-3. Queue, AI extraction, preview / edit / approve, admin commands
-4. Poster generator + WhatsApp text
-5. Public website from the mock-up (home, hackathon, archive, about, 404)
+2. ~~Project setup, database, bot answers `/start` + poster CPU test~~ ✅ 17 Oct
+3. ~~Queue, AI extraction, preview / edit / approve, admin commands~~ ✅ 17 Oct (+ rate limits, `/usage`)
+4. ~~Poster generator + WhatsApp text~~ ✅ 17 Oct (folded into step 3; poster speed-up left for step 7)
+5. ~~Public website from the mock-up (home, hackathon, archive, about, 404)~~ ✅ 17 Oct: https://arinjilley.arinjilley-bot.workers.dev
 6. Admin page (Telegram login, dashboard, add/edit form, image upload, Fill with AI)
 7. Polish, test with real posts, onboard admins
 
 ## 14. Open items
 - The other 3 admins (later)
-- The WhatsApp group link to use in the footer
+- WhatsApp group link: using `chat.whatsapp.com/HRgBh8m962qGtkhIbVu9WH` from the club's own posts (confirm)
+- Optional: a custom domain. Besides a nicer address, it enables Cloudflare's edge cache, so pages would barely use CPU at all

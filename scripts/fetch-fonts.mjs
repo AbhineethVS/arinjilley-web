@@ -46,9 +46,21 @@ async function main() {
       fetched++;
     }
   }
-  console.log(
-    fetched ? `fonts: downloaded ${fetched} Fontshare files` : "fonts: Fontshare files already present",
-  );
+  // JetBrains Mono (SIL Open Font License) for the website, straight from the official repository.
+  for (const [weight, name] of [
+    [500, "Medium"],
+    [600, "SemiBold"],
+  ]) {
+    const file = join(OUT, `JetBrainsMono-${weight}.woff2`);
+    if (await exists(file)) continue;
+    const res = await fetch(
+      `https://github.com/JetBrains/JetBrainsMono/raw/master/fonts/webfonts/JetBrainsMono-${name}.woff2`,
+    );
+    if (!res.ok) throw new Error(`Failed to download JetBrains Mono ${name}: HTTP ${res.status}`);
+    await writeFile(file, Buffer.from(await res.arrayBuffer()));
+    fetched++;
+  }
+  console.log(fetched ? `fonts: downloaded ${fetched} font files` : "fonts: all font files already present");
 }
 
 main().catch((err) => {

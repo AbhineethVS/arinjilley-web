@@ -16,3 +16,7 @@ design-refs/
 
 # Fontshare fonts: licence forbids redistribution via a public repo; fetched by scripts/fetch-fonts.mjs
 packages/core/assets/fonts/fontshare/
+
+# website build output
+apps/web/public/fonts/
+apps/web/public/app.js

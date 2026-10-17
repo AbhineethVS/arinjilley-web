@@ -155,6 +155,7 @@ export async function processBatch(env: Env, id: string, now: boolean, manual = 
       extractedBy: extraction.source,
       posterKind: batch.photoFileId ? "custom" : "generated",
       posterFileId: batch.photoFileId,
+      posterThumbFileId: batch.photoThumbFileId,
     });
     await updateBatch(d, id, { status: "done", hackathonId: h.id });
     await showPreview(env, h, batch.chatId, {

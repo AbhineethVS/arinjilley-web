@@ -55,6 +55,7 @@ export async function createDraft(
     extractedBy: NonNullable<NewHackathonRow["extractedBy"]>;
     posterKind: "generated" | "custom";
     posterFileId: string | null;
+    posterThumbFileId: string | null;
   },
 ): Promise<Hackathon> {
   const id = newId();
@@ -67,6 +68,7 @@ export async function createDraft(
     status: "draft",
     posterKind: input.posterKind,
     posterFileId: input.posterFileId,
+    posterThumbFileId: input.posterThumbFileId,
     posterStyle: Math.floor(Math.random() * 24),
     posterStatus: input.posterKind === "custom" ? "ready" : "pending",
     extractedBy: input.extractedBy,

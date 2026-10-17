@@ -22,7 +22,7 @@ import {
   updateFields,
   updateHackathon,
 } from "./store";
-import { esc, ignoreNotModified } from "./telegram";
+import { esc, ignoreNotModified, photoIds } from "./telegram";
 import { usageReport } from "./usage";
 
 export type Role = "owner" | "admin" | null;
@@ -315,6 +315,7 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
         await updateHackathon(d, id, {
           posterKind: "generated",
           posterFileId: null,
+          posterThumbFileId: null,
           posterStatus: "pending",
         });
         await answer("Making a generated poster (takes ~10 seconds)…");
@@ -354,7 +355,7 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
 
   // ── Photos: a custom poster for a listing, or part of a new post ──
   bot.on("message:photo", async (ctx) => {
-    const fileId = ctx.message.photo.at(-1)!.file_id;
+    const photo = photoIds(ctx.message.photo)!;
     const state = await getState(d, ctx.from.id);
     const replyTo = ctx.message.reply_to_message?.message_id;
     const target =
@@ -367,7 +368,8 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
       await clearState(d, ctx.from.id);
       await updateHackathon(d, target.id, {
         posterKind: "custom",
-        posterFileId: fileId,
+        posterFileId: photo.full,
+        posterThumbFileId: photo.thumb,
         posterStatus: "ready",
         previewPhotoMessageId: ctx.message.message_id,
       });
@@ -376,7 +378,7 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
         parse_mode: "HTML",
       });
     }
-    await addToInbox(ctx, ctx.message.caption ?? "", fileId);
+    await addToInbox(ctx, ctx.message.caption ?? "", photo);
   });
 
   // ── Text: an edit value, or part of a new post ──
@@ -420,7 +422,7 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
   bot.on("message", (ctx) => ctx.reply("Send me a hackathon post (text, link or poster), or /help."));
 
   /** Adds a message to the admin's current batch (or starts one) and schedules processing after a quiet period. */
-  async function addToInbox(ctx: BotContext, text: string, photoFileId: string | null) {
+  async function addToInbox(ctx: BotContext, text: string, photo: { full: string; thumb: string } | null) {
     const adminId = ctx.from!.id;
     const now = Date.now();
     const open = await openBatchFor(d, adminId, now - MERGE_WINDOW_MS);
@@ -431,7 +433,8 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
         .update(inboxBatches)
         .set({
           text: [open.text, text].filter(Boolean).join("\n\n"),
-          photoFileId: photoFileId ?? open.photoFileId,
+          photoFileId: photo?.full ?? open.photoFileId,
+          photoThumbFileId: photo?.thumb ?? open.photoThumbFileId,
           lastMessageAt: now,
           updatedAt: now,
         })
@@ -447,7 +450,8 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
         adminId,
         chatId: ctx.chat!.id,
         text,
-        photoFileId,
+        photoFileId: photo?.full ?? null,
+        photoThumbFileId: photo?.thumb ?? null,
         ackMessageId: ack.message_id,
         firstMessageAt: now,
         lastMessageAt: now,
