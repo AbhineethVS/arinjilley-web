@@ -16,6 +16,7 @@
     "db:migrate:remote": "npm run db:migrate:remote -w @arinjilley/bot",
     "secrets:init": "node scripts/init-dev-vars.mjs",
     "secrets:push": "node scripts/push-secrets.mjs",
+    "secrets:push:web": "node scripts/push-secrets.mjs --web",
     "webhook:set": "node scripts/set-webhook.mjs",
     "test": "vitest run",
     "typecheck": "npm run typecheck --workspaces --if-present",

@@ -1,3 +1,6 @@
+import { alertOwner, errorText } from "@arinjilley/core/db";
+import { drizzle } from "drizzle-orm/d1";
+import { BotError } from "grammy";
 import type { UserFromGetMe } from "grammy/types";
 import { createBot } from "./bot";
 import { isInternalJobRequest, type Job, runJob, sweep } from "./jobs";
@@ -31,7 +34,21 @@ async function handleTelegram(request: Request, env: Env, ctx: ExecutionContext)
     // Handlers only do quick work; slow steps run in the background, so Telegram gets a fast reply.
     await bot.handleUpdate(update as Parameters<typeof bot.handleUpdate>[0]);
   } catch (err) {
+    // In webhook mode grammY throws handler errors from handleUpdate (bot.catch only covers long polling).
     console.error("update failed", err);
+    const cause = err instanceof BotError ? err.error : err;
+    await alertOwner(
+      env,
+      drizzle(env.DB),
+      "bot:handler",
+      "The bot hit an error while replying to an admin",
+      errorText(cause),
+    );
+    if (err instanceof BotError) {
+      await err.ctx
+        .reply("Sorry, something went wrong there. The owner has been notified; please try again.")
+        .catch(() => {});
+    }
   }
   // Always 200: otherwise Telegram keeps re-sending the same update.
   return new Response("ok");

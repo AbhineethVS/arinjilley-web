@@ -152,10 +152,17 @@ export function posterMarkup(d: PosterData): string {
 </div></div>`;
 }
 
-/** Full HTML document for the screenshot (exactly 1080×1350). */
-export function posterHtml(d: PosterData): string {
+/**
+ * Full HTML document for the screenshot (exactly 1080×1350).
+ * Pass `fontCss` (inline base64 @font-face rules) so the browser needs no network at all; without it the
+ * fonts are loaded from the CDNs.
+ */
+export function posterHtml(d: PosterData, fontCss?: string): string {
+  const fonts = fontCss
+    ? `<style>${fontCss}</style>`
+    : POSTER_FONT_LINKS.map((href) => `<link rel="stylesheet" href="${href}">`).join("\n");
   return `<!doctype html><html><head><meta charset="utf-8">
-${POSTER_FONT_LINKS.map((href) => `<link rel="stylesheet" href="${href}">`).join("\n")}
+${fonts}
 <style>html,body{margin:0;width:${POSTER_WIDTH}px;height:${POSTER_HEIGHT}px;overflow:hidden;background:#000}${POSTER_CSS}</style>
 </head><body>${posterMarkup(d)}</body></html>`;
 }

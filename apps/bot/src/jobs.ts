@@ -9,6 +9,7 @@ import {
   fetchPageInfo,
   recordAiCall,
 } from "@arinjilley/core/ai";
+import { alertOwner, errorText } from "@arinjilley/core/db";
 import { InlineKeyboard } from "grammy";
 import { refreshPreview, renderPosterJob, showPreview } from "./preview";
 import {
@@ -58,7 +59,36 @@ export async function runJob(env: Env, job: Job): Promise<void> {
     else await refreshPreview(env, job.id);
   } catch (err) {
     console.error(`job ${job.type} ${job.id} failed`, err);
+    const what = {
+      batch: "Reading a forwarded post",
+      poster: "Making a poster",
+      refresh: "Updating a preview",
+    }[job.type];
+    await alertOwner(env, db(env), `job:${job.type}`, `${what} failed (it will be retried)`, errorText(err));
   }
+}
+
+/** Explains an OpenAI failure in plain words: out of credit, bad key, or a temporary problem. */
+function openAiAlert(error = ""): { key: string; title: string } {
+  if (/insufficient_quota|billing|exceeded your current quota/i.test(error)) {
+    return {
+      key: "openai:quota",
+      title:
+        "OpenAI credit has run out (or hit the monthly budget). Drafts are being filled with basic rules only. Top up or raise the limit at platform.openai.com → Billing.",
+    };
+  }
+  if (/OpenAI 401|invalid_api_key|Incorrect API key/i.test(error)) {
+    return {
+      key: "openai:key",
+      title:
+        "The OpenAI API key isn't working (revoked or wrong). Drafts are being filled with basic rules only. Create a new key and update OPENAI_API_KEY.",
+    };
+  }
+  return {
+    key: "openai:other",
+    title:
+      "An OpenAI call failed, so a draft was filled with basic rules. Usually temporary; check it if this keeps happening.",
+  };
 }
 
 async function editAck(
@@ -142,6 +172,10 @@ export async function processBatch(env: Env, id: string, now: boolean, manual = 
           ],
         };
     if (extraction.ai) await recordAiCall(env, d, batch.adminId, extraction.ai.ok, extraction.ai.usage);
+    if (extraction.ai && !extraction.ai.ok) {
+      const a = openAiAlert(extraction.ai.error);
+      await alertOwner(env, d, a.key, a.title, extraction.ai.error);
+    }
 
     if (!extraction.isHackathon && !batch.force && !manual && !batch.photoFileId) {
       await updateBatch(d, id, { status: "rejected" });
@@ -196,5 +230,36 @@ export async function sweep(env: Env, ctx: ExecutionContext): Promise<void> {
   }
   for (const p of await pendingPosters(d, now - 60_000)) {
     ctx.waitUntil(kick(env, { type: "poster", id: p.id }));
+  }
+  // Once an hour: warn about posters that have been waiting a long time, and tidy old rows.
+  if (new Date(now).getUTCMinutes() === 7) {
+    const stuck = await pendingPosters(d, now - 30 * 60_000);
+    if (stuck.length) {
+      await alertOwner(
+        env,
+        d,
+        "posters:stuck",
+        `${stuck.length} poster(s) have been waiting over 30 minutes. Browser Rendering's free 10 minutes/day may be used up; they'll keep retrying and usually go through after midnight UTC (5:30 AM IST).`,
+      );
+    }
+    ctx.waitUntil(housekeeping(env, now));
+  }
+}
+
+/** Deletes rows nothing needs any more, so the database stays small forever. */
+async function housekeeping(env: Env, now: number): Promise<void> {
+  try {
+    const day = 86_400_000;
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM admin_logins WHERE created_at < ?").bind(now - day),
+      env.DB.prepare("DELETE FROM admin_state WHERE updated_at < ?").bind(now - day),
+      env.DB.prepare(
+        "DELETE FROM inbox_batches WHERE status IN ('done','rejected','failed') AND updated_at < ?",
+      ).bind(now - 30 * day),
+      // /usage reports the last 30 days; keep 120 for a little history.
+      env.DB.prepare("DELETE FROM ai_calls WHERE created_at < ?").bind(now - 120 * day),
+    ]);
+  } catch (err) {
+    console.error("housekeeping failed", err);
   }
 }

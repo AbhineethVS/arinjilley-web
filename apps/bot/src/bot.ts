@@ -490,6 +490,7 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
     );
   }
 
+  // Only used in long-polling mode; webhook errors are handled (and alerted) in index.ts.
   bot.catch((err) => console.error("bot error", err.error));
   return bot;
 }

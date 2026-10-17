@@ -19,7 +19,7 @@ export interface Extraction {
   source: "openai" | "rules";
   warnings: string[];
   /** Set when OpenAI was called (even if it failed), so the call can be logged against the limits. */
-  ai?: { ok: boolean; usage: AiUsage };
+  ai?: { ok: boolean; usage: AiUsage; error?: string };
 }
 
 const nullableText = z
@@ -207,6 +207,7 @@ export async function extractListing(
     };
   } catch (err) {
     console.error("OpenAI extraction failed, using rules", err);
-    return { ...extractWithRules(input.text, input.urls, input.sentAt), ai: { ok: false, usage } };
+    const error = err instanceof Error ? err.message : String(err);
+    return { ...extractWithRules(input.text, input.urls, input.sentAt), ai: { ok: false, usage, error } };
   }
 }

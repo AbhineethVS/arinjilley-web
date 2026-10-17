@@ -22,7 +22,7 @@ import {
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { z } from "zod";
-import { fromParts, type ListingForm, listingToForm } from "../../shared/form";
+import { fromParts, listingToForm } from "../../shared/form";
 import type { Admin } from "./session";
 
 const json = (data: unknown, status = 200) =>

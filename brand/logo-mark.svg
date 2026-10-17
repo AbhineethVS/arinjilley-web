@@ -1,5 +1,5 @@
 <!-- arinjilley? logo: split-flap tile (departure board) with a cursor as the question mark's dot. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#161618"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>arinjilley?</title><rect width="512" height="512" rx="112" fill="#161618"/>
     
   <rect x="88" y="64" width="336" height="184" rx="40" fill="#2A2A2F"/>
   <rect x="88" y="264" width="336" height="184" rx="40" fill="#202024"/>

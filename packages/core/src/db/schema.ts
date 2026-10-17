@@ -151,6 +151,13 @@ export const aiCalls = sqliteTable(
   (t) => [index("ai_calls_created").on(t.createdAt), index("ai_calls_admin").on(t.adminId, t.createdAt)],
 );
 
+/** Problems the owner was told about on Telegram, so the same problem alerts at most once an hour. */
+export const alerts = sqliteTable("alerts", {
+  key: text("key").primaryKey(),
+  lastSentAt: integer("last_sent_at").notNull(),
+  suppressed: integer("suppressed").notNull().default(0),
+});
+
 export type AdminRow = typeof admins.$inferSelect;
 export type InboxBatchRow = typeof inboxBatches.$inferSelect;
 export type AdminStateRow = typeof adminState.$inferSelect;

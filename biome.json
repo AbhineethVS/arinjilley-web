@@ -6,8 +6,8 @@
       "!**/node_modules",
       "!**/.wrangler",
       "!**/worker-configuration.d.ts",
-      "!mockup",
-      "!migrations/meta"
+      "!migrations/meta",
+      "!apps/web/dist"
     ]
   },
   "formatter": {
@@ -26,5 +26,20 @@
     "formatter": {
       "quoteStyle": "double"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          },
+          "style": {
+            "noDescendingSpecificity": "off"
+          }
+        }
+      }
+    }
+  ]
 }

@@ -210,6 +210,8 @@ A split-flap tile (departure board, matching the flip clock and boarding-pass po
 - No phone numbers, sender names or other groups' links are stored or shown.
 - The original message text is stored only after cleaning (for re-processing).
 - Only the owner can add admins. Only admins can use the bot. The bot's webhook verifies a secret token.
+- **Error alerts:** when something breaks (a background job fails, OpenAI is out of credit or the key stops working, posters are stuck for 30+ minutes, the website errors), the bot messages the owner on Telegram. Each kind of problem alerts at most once an hour, and repeats are counted. Website visitors see a friendly error page.
+- **Housekeeping:** once an hour the bot deletes old login requests and edit states (after 1 day), finished inbox batches (after 30 days) and AI call logs (after 120 days).
 - Posters may contain whatever the organiser printed on them. Accepted for v1.
 
 ## 11. Tech stack
@@ -222,14 +224,14 @@ A split-flap tile (departure board, matching the flip clock and boarding-pass po
 | Admin login | Login through the bot (one-time deep link approved by the bot, browser-bound) + HMAC-signed session cookie. State-changing requests must come from our own origin |
 | AI | **OpenAI `gpt-5-mini`** → rule-based fallback. Output validated with **Zod**. Rate-limited (§4) |
 | Reading links | Cloudflare's built-in HTMLRewriter (page title, description, image, text) |
-| Posters | The boarding-pass poster is an HTML/CSS page (same code as the mock-up), screenshotted by **Cloudflare Browser Rendering** (free: 10 browser-minutes/day, about 7–15 s per poster). Rendering inside the Worker (Satori + resvg) was tested and exceeds the free plan's 10 ms CPU limit (error 1102) |
+| Posters | The boarding-pass poster is an HTML/CSS page (same code as the mock-up), screenshotted by **Cloudflare Browser Rendering** (free: 10 browser-minutes/day, about 3–4 s per poster with the fonts inlined). Rendering inside the Worker (Satori + resvg) was tested and exceeds the free plan's 10 ms CPU limit (error 1102) |
 | Images | Stored in **Telegram** (uploaded posters and generated ones). We keep the file ID of the full image and of a ~320px thumbnail, and serve them through `/img/...` with year-long browser caching. Only images belonging to live listings are served, so it isn't an open proxy. Generated posters on the site are drawn as HTML (no image download); the PNG is used for link previews (`og:image`). No R2 needed |
 | Fonts / icons | Sentient, General Sans, JetBrains Mono and the Phosphor icons we use, all self-hosted |
 | Tooling | Wrangler (local dev + deploy), Vitest, Biome |
 | Domain | Site: `arinjilley.pages.dev` (free). Bot: `arinjilley-bot.arinjilley-bot.workers.dev` (internal only, never shown to members). Optional custom domain later (~₹800/yr) |
 | Secrets | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `OPENAI_API_KEY`, `SESSION_SECRET`: set with `wrangler secret put` or a git-ignored `.dev.vars` file, never committed
 
-**Poster rendering (tested 17 Oct):** generating PNGs inside the Worker exceeded the free CPU limit on every request, so posters are rendered by Cloudflare Browser Rendering instead. Free limits: 10 browser-minutes/day, 1 new browser per 20 s (sessions are reused for 60 s). If the daily limit is ever hit, the poster is retried later; listings still go live without waiting.
+**Poster rendering (tested 17 Oct):** generating PNGs inside the Worker exceeded the free CPU limit on every request, so posters are rendered by Cloudflare Browser Rendering instead. Free limits: 10 browser-minutes/day, 1 new browser per 20 s. The browser is closed straight after each poster, because an idle open browser still uses up the daily minutes; that works out to roughly 150 posters a day. If the daily limit is ever hit, the poster is retried every minute and the owner gets an alert; listings still go live without waiting.
 
 ## 12. Not in v1
 Automatic WhatsApp capture · reading text inside posters/PDFs · special handling for lists · repost/bump feature · light mode · visitor accounts or notifications.
@@ -241,7 +243,7 @@ Automatic WhatsApp capture · reading text inside posters/PDFs · special handli
 4. ~~Poster generator + WhatsApp text~~ ✅ 17 Oct (folded into step 3; poster speed-up left for step 7)
 5. ~~Public website from the mock-up (home, hackathon, archive, about, 404)~~ ✅ 17 Oct: https://arinjilley.pages.dev
 6. ~~Admin page (Telegram login, dashboard, add/edit form, image upload, Fill with AI)~~ ✅ 18 Oct: https://arinjilley.pages.dev/admin
-7. Polish, test with real posts, onboard admins
+7. Polish ✅: faster posters (3–4 s), owner error alerts, housekeeping, README, tests. Still to do: onboard admins
 
 ## 14. Open items
 - The other 3 admins (later)

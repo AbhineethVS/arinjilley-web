@@ -298,3 +298,21 @@ export function notFoundPage(ctx: PageCtx, path: string): string {
     noindex: true,
   });
 }
+
+export function errorPage(ctx: PageCtx, path: string): string {
+  const body = `<main class="nf">
+  <div class="code mono">500 · DELAYED</div>
+  <h1 class="display">Something went wrong.</h1>
+  <p>We've been notified and are looking into it. Try again in a minute.</p>
+  <a class="btn btn-primary" href="/">${icon("arrow-left")}Back to the board</a>
+</main>
+<div class="wrap">${footer(ctx)}</div>`;
+  return layout(ctx, {
+    title: "Something went wrong · arinjilley?",
+    description: "Something went wrong.",
+    path,
+    page: "other",
+    body,
+    noindex: true,
+  });
+}

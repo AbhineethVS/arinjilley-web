@@ -36,6 +36,13 @@
       "when": 1792255268834,
       "tag": "0004_admin_logins",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792258709743,
+      "tag": "0005_alerts",
+      "breakpoints": true
     }
   ]
 }
