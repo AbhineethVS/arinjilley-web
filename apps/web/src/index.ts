@@ -1,5 +1,6 @@
-// The public website (SPEC §8). Static files (CSS, JS, fonts) are served by Workers Static Assets without
-// running this code; this Worker renders the HTML pages and proxies poster images.
+// The public website (SPEC §8) and the admin page (§8.5), on Cloudflare Pages. Static files (CSS, JS, fonts)
+// are served by Pages directly (see _routes.json); this code renders HTML pages and proxies poster images.
+import { handleAdmin } from "./admin";
 import { liveListingBySlug, liveListings } from "./data";
 import { serveImage } from "./img";
 import { aboutPage, detailPage, homePage, notFoundPage, type PageCtx } from "./pages";
@@ -28,6 +29,8 @@ export default {
     const ctx: PageCtx = { siteUrl: env.SITE_URL.replace(/\/+$/, ""), groupUrl: env.GROUP_URL };
     const now = Date.now();
 
+    if (path === "/admin" || path.startsWith("/admin/")) return handleAdmin(request, env, path);
+
     if (request.method !== "GET" && request.method !== "HEAD") {
       return new Response("Method not allowed", { status: 405 });
     }
@@ -48,9 +51,12 @@ export default {
     if (img) return serveImage(env, decodeURIComponent(img[1]!));
 
     if (path === "/robots.txt") {
-      return new Response(`User-agent: *\nAllow: /\nSitemap: ${ctx.siteUrl}/sitemap.xml\n`, {
-        headers: { "content-type": "text/plain" },
-      });
+      return new Response(
+        `User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: ${ctx.siteUrl}/sitemap.xml\n`,
+        {
+          headers: { "content-type": "text/plain" },
+        },
+      );
     }
     if (path === "/sitemap.xml") {
       const list = await liveListings(env);

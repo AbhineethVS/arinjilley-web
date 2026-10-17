@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  // The public website, on Cloudflare Pages: https://arinjilley.pages.dev
+  // The public website and admin page, on Cloudflare Pages: https://arinjilley.pages.dev
   // Build with `npm run build` (writes dist/), deploy with `npm run deploy`.
   "name": "arinjilley",
   "pages_build_output_dir": "./dist",
@@ -8,14 +8,25 @@
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "SITE_URL": "https://arinjilley.pages.dev",
-    "GROUP_URL": "https://chat.whatsapp.com/HRgBh8m962qGtkhIbVu9WH"
+    "GROUP_URL": "https://chat.whatsapp.com/HRgBh8m962qGtkhIbVu9WH",
+    // Admin page login goes through the bot; the owner can manage admins.
+    "BOT_USERNAME": "arinjilley_bot",
+    "OWNER_TELEGRAM_ID": "7204471811",
+    // "Fill with AI" on the admin page: keep these the same as apps/bot/wrangler.jsonc.
+    "OPENAI_MODEL": "gpt-5-mini",
+    "OPENAI_REASONING": "minimal",
+    "AI_LIMIT_PER_ADMIN_PER_HOUR": "15",
+    "AI_LIMIT_PER_DAY": "60",
+    "AI_MAX_INPUT_CHARS": "6000"
   },
-  // Same database as the bot (the site only reads live listings).
+  // Same database as the bot.
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "arinjilley",
       "database_id": "81ff0986-2c48-4660-a128-c1dfd0cbca88"
     }
-  ]
+  ],
+  // Lets the admin page ask the bot to render posters and refresh its Telegram previews.
+  "services": [{ "binding": "BOT", "service": "arinjilley-bot" }]
 }

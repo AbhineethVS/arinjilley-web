@@ -26,10 +26,10 @@ await mkdir(join(dist, "fonts"), { recursive: true });
 await cp(join(here, "public"), dist, { recursive: true });
 await Promise.all(fonts.map((f) => copyFile(join(fontsSrc, f), join(dist, "fonts", f))));
 
-// Browser script
+// Browser scripts: the public site (app.js) and the admin page (admin.js)
 await build({
-  entryPoints: [join(here, "client/app.ts")],
-  outfile: join(dist, "app.js"),
+  entryPoints: { app: join(here, "client/app.ts"), admin: join(here, "client/admin.ts") },
+  outdir: dist,
   bundle: true,
   minify: true,
   format: "iife",
@@ -57,7 +57,11 @@ await build({
 await writeFile(
   join(dist, "_routes.json"),
   JSON.stringify(
-    { version: 1, include: ["/*"], exclude: ["/site.css", "/app.js", "/favicon.svg", "/fonts/*"] },
+    {
+      version: 1,
+      include: ["/*"],
+      exclude: ["/site.css", "/admin.css", "/app.js", "/admin.js", "/favicon.svg", "/fonts/*"],
+    },
     null,
     2,
   ),

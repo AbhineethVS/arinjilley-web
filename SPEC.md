@@ -164,7 +164,7 @@ Desktop side panel: ↑ ↓ to move to the next/previous hackathon, Esc to close
 Link previews (WhatsApp, etc.) use the **poster** as the image.
 
 ### 8.5 Admin page (`/admin`)
-- **Login with Telegram** (Telegram's official login button). Only accounts on the admin list get in, so it's the same list as the bot and there are no extra passwords. Sessions last 30 days.
+- **Log in through the bot** (changed from the Login Widget on 18 Oct, since the widget asks for a phone number on mobile): tap "Log in with Telegram" → Telegram opens `@arinjilley_bot?start=login_<id>` → tap Start → the bot approves that one-time request (10-minute expiry) → the waiting page gets a signed, HttpOnly session cookie (30 days). The browser holds a secret matching the request, so a leaked link alone can't log anyone in. The admin check runs on every request, so `/removeadmin` takes effect immediately.
 - **Dashboard**: tabs for Drafts · Live · Archive, search, and a "New hackathon" button. Drafts from the bot show up here, and the other way round.
 - **Add / edit form** with every field from §5:
   - **Paste text or a link → "Fill with AI"** fills the form. Every field is still editable.
@@ -210,7 +210,7 @@ Link previews (WhatsApp, etc.) use the **poster** as the image.
 | Bot | Cloudflare Worker + **grammY**. Telegram webhook, plus a cron every minute for the queue and message merging |
 | Database | **Cloudflare D1** (SQLite) + **Drizzle** for queries and migrations |
 | Website + admin | **https://arinjilley.pages.dev**: classic **Cloudflare Pages** (project `arinjilley`) with the server code as `_worker.js` (same free limits as Workers; static files skip the Worker via `_routes.json`). _Moved from a `workers.dev` address on 17 Oct (it was `arinjilley.arinjilley-bot.workers.dev`); the old address 301-redirects (`apps/redirect`)._ The code (`apps/web`) renders HTML with string templates and reads D1. CSS, the bundled browser script (esbuild), fonts and the favicon are **Workers Static Assets**, served without running the Worker. Rendering code is shared between server and browser (`apps/web/shared`), so filters, search and the side panel re-render exactly like the first load. _Changed from Astro on 17 Oct: the free plan's ~10 ms CPU limit, plus no edge cache on `workers.dev`, favour minimal per-request work. Measured: 5 ms average, 16 ms max (cold start)._ |
-| Admin login | Telegram Login Widget, signature checked on the server, signed session cookie |
+| Admin login | Login through the bot (one-time deep link approved by the bot, browser-bound) + HMAC-signed session cookie. State-changing requests must come from our own origin |
 | AI | **OpenAI `gpt-5-mini`** → rule-based fallback. Output validated with **Zod**. Rate-limited (§4) |
 | Reading links | Cloudflare's built-in HTMLRewriter (page title, description, image, text) |
 | Posters | The boarding-pass poster is an HTML/CSS page (same code as the mock-up), screenshotted by **Cloudflare Browser Rendering** (free: 10 browser-minutes/day, about 7–15 s per poster). Rendering inside the Worker (Satori + resvg) was tested and exceeds the free plan's 10 ms CPU limit (error 1102) |
@@ -231,7 +231,7 @@ Automatic WhatsApp capture · reading text inside posters/PDFs · special handli
 3. ~~Queue, AI extraction, preview / edit / approve, admin commands~~ ✅ 17 Oct (+ rate limits, `/usage`)
 4. ~~Poster generator + WhatsApp text~~ ✅ 17 Oct (folded into step 3; poster speed-up left for step 7)
 5. ~~Public website from the mock-up (home, hackathon, archive, about, 404)~~ ✅ 17 Oct: https://arinjilley.pages.dev
-6. Admin page (Telegram login, dashboard, add/edit form, image upload, Fill with AI)
+6. ~~Admin page (Telegram login, dashboard, add/edit form, image upload, Fill with AI)~~ ✅ 18 Oct: https://arinjilley.pages.dev/admin
 7. Polish, test with real posts, onboard admins
 
 ## 14. Open items

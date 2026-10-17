@@ -1,112 +1,27 @@
-import { type Hackathon, slugify } from "@arinjilley/core";
 import {
   type AdminStateRow,
   adminState,
   hackathons,
   type InboxBatchRow,
   inboxBatches,
-  type ListingFields,
-  listingToColumns,
-  type NewHackathonRow,
   rowToHackathon,
 } from "@arinjilley/core/db";
-import { and, desc, eq, inArray, like, lte, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, lte, ne, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 
 export type DB = ReturnType<typeof db>;
 export const db = (env: Env) => drizzle(env.DB);
 
-/** Short random id, e.g. "k3x9q2m7a1bz" (fits in Telegram callback data). */
-export function newId(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(9));
-  return [...bytes].map((b) => (b % 36).toString(36)).join("") + Date.now().toString(36).slice(-3);
-}
-
-// ── Hackathons ──
-
-export async function getHackathon(d: DB, id: string): Promise<Hackathon | null> {
-  const row = await d.select().from(hackathons).where(eq(hackathons.id, id)).get();
-  return row ? rowToHackathon(row) : null;
-}
-
-export async function getHackathonRow(d: DB, id: string) {
-  return d.select().from(hackathons).where(eq(hackathons.id, id)).get();
-}
-
-/** A unique slug for a title: "colossus-3-0", then "colossus-3-0-2", … */
-async function uniqueSlug(d: DB, title: string, exceptId?: string): Promise<string> {
-  const base = slugify(title);
-  const rows = await d
-    .select({ slug: hackathons.slug, id: hackathons.id })
-    .from(hackathons)
-    .where(or(eq(hackathons.slug, base), like(hackathons.slug, `${base}-%`)))
-    .all();
-  const taken = new Set(rows.filter((r) => r.id !== exceptId).map((r) => r.slug));
-  if (!taken.has(base)) return base;
-  for (let i = 2; ; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`;
-}
-
-export async function createDraft(
-  d: DB,
-  input: {
-    fields: ListingFields;
-    createdBy: number;
-    sourceText: string;
-    extractedBy: NonNullable<NewHackathonRow["extractedBy"]>;
-    posterKind: "generated" | "custom";
-    posterFileId: string | null;
-    posterThumbFileId: string | null;
-  },
-): Promise<Hackathon> {
-  const id = newId();
-  const now = Date.now();
-  await d.insert(hackathons).values({
-    ...listingToColumns(input.fields),
-    id,
-    slug: await uniqueSlug(d, input.fields.title),
-    title: input.fields.title,
-    status: "draft",
-    posterKind: input.posterKind,
-    posterFileId: input.posterFileId,
-    posterThumbFileId: input.posterThumbFileId,
-    posterStyle: Math.floor(Math.random() * 24),
-    posterStatus: input.posterKind === "custom" ? "ready" : "pending",
-    extractedBy: input.extractedBy,
-    sourceText: input.sourceText,
-    createdBy: input.createdBy,
-    createdAt: now,
-    updatedAt: now,
-  });
-  return (await getHackathon(d, id))!;
-}
-
-export async function updateHackathon(d: DB, id: string, values: Partial<NewHackathonRow>) {
-  if ("title" in values && values.title) {
-    const row = await getHackathonRow(d, id);
-    // Keep the slug stable once live (shared links must keep working); drafts follow the title.
-    if (row && row.status === "draft") values = { ...values, slug: await uniqueSlug(d, values.title, id) };
-  }
-  await d
-    .update(hackathons)
-    .set({ ...values, updatedAt: Date.now() })
-    .where(eq(hackathons.id, id));
-}
-
-export async function updateFields(d: DB, id: string, fields: Partial<ListingFields>) {
-  await updateHackathon(d, id, listingToColumns(fields));
-}
-
-/** Existing (non-discarded) listing with the same registration link, if any. */
-export async function findByUrls(d: DB, urls: string[]): Promise<Hackathon | null> {
-  if (!urls.length) return null;
-  const variants = urls.flatMap((u) => [u, u.replace(/\/+$/, ""), `${u.replace(/\/+$/, "")}/`]);
-  const row = await d
-    .select()
-    .from(hackathons)
-    .where(and(inArray(hackathons.registerUrl, variants), ne(hackathons.status, "discarded")))
-    .get();
-  return row ? rowToHackathon(row) : null;
-}
+// Listing helpers shared with the admin page live in @arinjilley/core/db (repo.ts).
+export {
+  createListing,
+  findByUrls,
+  getHackathon,
+  getHackathonRow,
+  newId,
+  updateFields,
+  updateHackathon,
+} from "@arinjilley/core/db";
 
 /** Which listing a preview message (text or poster) belongs to, for replies like "reply with a photo". */
 export async function findByPreviewMessage(d: DB, chatId: number, messageId: number) {

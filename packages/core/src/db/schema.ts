@@ -122,6 +122,20 @@ export const adminState = sqliteTable("admin_state", {
   updatedAt: integer("updated_at").notNull().default(now),
 });
 
+/**
+ * Admin page login through the bot: the page creates a request, the admin opens t.me/<bot>?start=login_<id>,
+ * the bot approves it, and the page (holding the matching browser secret) turns it into a session.
+ */
+export const adminLogins = sqliteTable("admin_logins", {
+  id: text("id").primaryKey(), // goes in the Telegram deep link
+  browserHash: text("browser_hash").notNull(), // SHA-256 of the secret kept in the browser's cookie
+  telegramId: integer("telegram_id"),
+  approvedAt: integer("approved_at"),
+  usedAt: integer("used_at"),
+  createdAt: integer("created_at").notNull().default(now),
+  expiresAt: integer("expires_at").notNull(),
+});
+
 /** Every OpenAI call, for rate limits (SPEC §4) and the /usage command. */
 export const aiCalls = sqliteTable(
   "ai_calls",

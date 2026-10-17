@@ -1,6 +1,7 @@
 // Turns a cleaned post (plus optional page data) into structured listing fields with OpenAI.
 // Uses Structured Outputs (a strict JSON schema), so the reply always has exactly these keys.
-import { dayMonth, istParts, WEEKDAYS } from "@arinjilley/core";
+import type { AiSettings } from "../ai/settings";
+import { dayMonth, istParts, WEEKDAYS } from "../time";
 import type { PageInfo } from "./page";
 
 export interface AiUsage {
@@ -129,7 +130,7 @@ function pageBlock(page: PageInfo | null): string {
 }
 
 export async function extractWithOpenAI(
-  env: Env,
+  env: AiSettings,
   input: { text: string; urls: string[]; sentAt: number; page: PageInfo | null },
 ): Promise<{ raw: RawExtraction; usage: AiUsage }> {
   // Hard cap on what we send, so one huge message can't burn through credit.

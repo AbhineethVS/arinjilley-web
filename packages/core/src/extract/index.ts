@@ -1,15 +1,14 @@
 // Extraction entry point: OpenAI first, then a simple rule-based fallback (SPEC §4).
 // Every result is validated and normalised here, so a bad AI reply can't produce an invalid listing.
-import {
-  type DateField,
-  type Mode,
-  parseDateInput,
-  parseIst,
-  shortPrize,
-  stripEmoji,
-} from "@arinjilley/core";
-import type { ListingFields } from "@arinjilley/core/db";
+
 import { z } from "zod";
+import type { AiSettings } from "../ai/settings";
+import { stripEmoji } from "../clean";
+import type { ListingFields } from "../db/map";
+import { parseDateInput } from "../parse";
+import { shortPrize } from "../prize";
+import { type DateField, parseIst } from "../time";
+import type { Mode } from "../types";
 import { type AiUsage, extractWithOpenAI, type RawExtraction } from "./openai";
 import type { PageInfo } from "./page";
 
@@ -188,7 +187,7 @@ export function extractWithRules(text: string, urls: string[], sentAt: number): 
 }
 
 export async function extractListing(
-  env: Env,
+  env: AiSettings,
   input: { text: string; urls: string[]; sentAt: number; page: PageInfo | null },
 ): Promise<Extraction> {
   const allUrls =

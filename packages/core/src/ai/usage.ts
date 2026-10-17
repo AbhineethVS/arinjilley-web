@@ -1,18 +1,21 @@
 // AI rate limits and usage tracking, so the club's OpenAI credit can't be burned by accident.
 // Limits are settings in wrangler.jsonc; the monthly budget set in the OpenAI dashboard is the final safety net.
 
-import { countdown, DAY, HOUR } from "@arinjilley/core";
-import { aiCalls } from "@arinjilley/core/db";
 import { and, count, eq, gte, min, sum } from "drizzle-orm";
-import type { AiUsage } from "./extract/openai";
-import type { DB } from "./store";
+import type { DrizzleD1Database } from "drizzle-orm/d1";
+import { aiCalls } from "../db/schema";
+import type { AiUsage } from "../extract/openai";
+import { countdown, DAY, HOUR } from "../time";
+import type { AiSettings } from "./settings";
+
+type DB = DrizzleD1Database;
 
 export interface Limits {
   perAdminPerHour: number;
   perDay: number;
 }
 
-export const limits = (env: Env): Limits => ({
+export const limits = (env: AiSettings): Limits => ({
   perAdminPerHour: Number(env.AI_LIMIT_PER_ADMIN_PER_HOUR) || 15,
   perDay: Number(env.AI_LIMIT_PER_DAY) || 60,
 });
@@ -20,7 +23,12 @@ export const limits = (env: Env): Limits => ({
 export type LimitCheck = { ok: true } | { ok: false; message: string };
 
 /** Rolling windows: at most N calls per admin in the last hour, and M calls overall in the last 24 hours. */
-export async function checkAiLimit(env: Env, d: DB, adminId: number, now = Date.now()): Promise<LimitCheck> {
+export async function checkAiLimit(
+  env: AiSettings,
+  d: DB,
+  adminId: number,
+  now = Date.now(),
+): Promise<LimitCheck> {
   const l = limits(env);
   const mine = await d
     .select({ n: count(), oldest: min(aiCalls.createdAt) })
@@ -49,7 +57,7 @@ export async function checkAiLimit(env: Env, d: DB, adminId: number, now = Date.
   return { ok: true };
 }
 
-export async function recordAiCall(env: Env, d: DB, adminId: number, ok: boolean, usage: AiUsage) {
+export async function recordAiCall(env: AiSettings, d: DB, adminId: number, ok: boolean, usage: AiUsage) {
   await d.insert(aiCalls).values({
     adminId,
     model: env.OPENAI_MODEL,
@@ -61,7 +69,7 @@ export async function recordAiCall(env: Env, d: DB, adminId: number, ok: boolean
 }
 
 /** Estimated cost in USD from token counts (prices are settings; check OpenAI's dashboard for exact billing). */
-export function estimateUsd(env: Env, promptTokens: number, completionTokens: number): number {
+export function estimateUsd(env: AiSettings, promptTokens: number, completionTokens: number): number {
   const inPrice = Number(env.AI_PRICE_INPUT_PER_M) || 0;
   const outPrice = Number(env.AI_PRICE_OUTPUT_PER_M) || 0;
   return (promptTokens * inPrice + completionTokens * outPrice) / 1_000_000;
@@ -80,7 +88,7 @@ async function totals(d: DB, since: number) {
   return { calls: r?.calls ?? 0, prompt: Number(r?.prompt ?? 0), completion: Number(r?.completion ?? 0) };
 }
 
-export async function usageReport(env: Env, d: DB, now = Date.now()): Promise<string> {
+export async function usageReport(env: AiSettings, d: DB, now = Date.now()): Promise<string> {
   const l = limits(env);
   const rows = [
     ["Last 24 hours", await totals(d, now - DAY)],

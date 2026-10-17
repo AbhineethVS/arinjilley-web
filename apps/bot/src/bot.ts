@@ -1,7 +1,8 @@
 import { boardStatus, dayMonth, deadlineInstant, type Mode } from "@arinjilley/core";
-import { admins, inboxBatches, rowToHackathon } from "@arinjilley/core/db";
+import { usageReport } from "@arinjilley/core/ai";
+import { adminLogins, admins, inboxBatches, rowToHackathon } from "@arinjilley/core/db";
 import { POSTER_STYLE_COUNT, shuffleStyle } from "@arinjilley/core/poster";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { Bot, type Context, InlineKeyboard } from "grammy";
 import type { UserFromGetMe } from "grammy/types";
 import { editKeyboard, FIELDS, promptFor } from "./edit";
@@ -23,7 +24,6 @@ import {
   updateHackathon,
 } from "./store";
 import { esc, ignoreNotModified, photoIds } from "./telegram";
-import { usageReport } from "./usage";
 
 export type Role = "owner" | "admin" | null;
 export interface BotContext extends Context {
@@ -106,6 +106,30 @@ export function createBot(env: Env, exec: ExecutionContext, botInfo: UserFromGet
     ].join("\n");
 
   bot.command("start", async (ctx) => {
+    // "Log in with Telegram" on the admin page opens t.me/<bot>?start=login_<id>: approve that login request.
+    const payload = ctx.match.trim();
+    if (payload.startsWith("login_")) {
+      const id = payload.slice("login_".length);
+      const approved = await d
+        .update(adminLogins)
+        .set({ telegramId: ctx.from!.id, approvedAt: Date.now() })
+        .where(
+          and(
+            eq(adminLogins.id, id),
+            isNull(adminLogins.approvedAt),
+            isNull(adminLogins.usedAt),
+            gt(adminLogins.expiresAt, Date.now()),
+          ),
+        )
+        .returning({ id: adminLogins.id })
+        .get();
+      await ctx.reply(
+        approved
+          ? "✅ You're logged in to the admin page. Go back to your browser; it'll continue on its own."
+          : "That login link has expired or was already used. Go back to the admin page and tap “Log in with Telegram” again.",
+      );
+      return;
+    }
     // The owner's menu includes admin management. Telegram only allows a per-chat menu after the first message.
     if (ctx.role === "owner") {
       await ctx.api

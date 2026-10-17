@@ -2,13 +2,18 @@
 // separate "jobs": the Worker calls itself through the SELF service binding, answers 202 straight away, and does
 // the work in waitUntil. Each job gets its own time budget. A cron sweep every minute retries anything missed.
 import { cleanMessage, extractUrls, substantiveLength } from "@arinjilley/core";
+import {
+  checkAiLimit,
+  extractListing,
+  extractWithRules,
+  fetchPageInfo,
+  recordAiCall,
+} from "@arinjilley/core/ai";
 import { InlineKeyboard } from "grammy";
-import { extractListing, extractWithRules } from "./extract";
-import { fetchPageInfo } from "./extract/page";
-import { renderPosterJob, showPreview } from "./preview";
+import { refreshPreview, renderPosterJob, showPreview } from "./preview";
 import {
   claimBatch,
-  createDraft,
+  createListing,
   db,
   findByUrls,
   overdueBatches,
@@ -16,14 +21,15 @@ import {
   updateBatch,
 } from "./store";
 import { api, esc, ignoreNotModified } from "./telegram";
-import { checkAiLimit, recordAiCall } from "./usage";
 
 /** How long to wait after the last message before reading a batch (so a link + its text become one listing). */
 export const QUIET_MS = 12_000;
 
 export type Job =
   | { type: "batch"; id: string; now?: boolean; manual?: boolean }
-  | { type: "poster"; id: string };
+  | { type: "poster"; id: string }
+  // Sent by the admin page after an edit, so the Telegram preview card stays in sync.
+  | { type: "refresh"; id: string };
 
 const INTERNAL_PATH = "https://internal/_internal/job";
 
@@ -48,7 +54,8 @@ export function isInternalJobRequest(request: Request, env: Env): boolean {
 export async function runJob(env: Env, job: Job): Promise<void> {
   try {
     if (job.type === "batch") await processBatch(env, job.id, job.now ?? false, job.manual ?? false);
-    else await renderPosterJob(env, job.id);
+    else if (job.type === "poster") await renderPosterJob(env, job.id);
+    else await refreshPreview(env, job.id);
   } catch (err) {
     console.error(`job ${job.type} ${job.id} failed`, err);
   }
@@ -148,7 +155,7 @@ export async function processBatch(env: Env, id: string, now: boolean, manual = 
       return;
     }
 
-    const h = await createDraft(d, {
+    const h = await createListing(d, {
       fields: extraction.fields,
       createdBy: batch.adminId,
       sourceText: text,
