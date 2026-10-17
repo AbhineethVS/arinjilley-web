@@ -137,6 +137,74 @@ export function upcomingGroups(list: WebListing[], now: number): Group[] {
   return out;
 }
 
+/** One timeline group per IST day, captioned by `kicker`; items keep their order. */
+function dayGroups(
+  items: { h: WebListing; at: number }[],
+  now: number,
+  kicker: (k: number, todayK: number) => string,
+): Group[] {
+  const todayK = istDayKey(now);
+  const groups = new Map<number, Group>();
+  for (const { h, at } of items) {
+    const k = istDayKey(at);
+    if (!groups.has(k)) {
+      const sub =
+        k === todayK + 1 ? "Tomorrow" : k === todayK - 1 ? "Yesterday" : WEEKDAYS[istParts(at).weekday]!;
+      groups.set(k, {
+        kicker: kicker(k, todayK),
+        label: k === todayK ? "Today" : dayMonth(at),
+        sub,
+        today: k === todayK,
+        items: [],
+      });
+    }
+    groups.get(k)!.items.push(h);
+  }
+  return [...groups.values()];
+}
+
+/** Upcoming, by the day the event starts (or started, for ones already running). */
+export function startingGroups(list: WebListing[], now: number): Group[] {
+  const live = list.filter((h) => boardStatus(h, now) !== "archived");
+  const dated = live
+    .filter((h) => h.start)
+    .map((h) => ({ h, at: h.start!.at }))
+    .sort((a, b) => a.at - b.at);
+  const out = dayGroups(dated, now, (k, today) => (k < today ? "Event started" : "Event starts"));
+  const undated = live.filter((h) => !h.start);
+  if (undated.length) out.push({ label: "Dates TBA", sub: "No event date yet", items: undated });
+  return out;
+}
+
+/** Upcoming, newest first, by the day each listing was published. */
+export function addedGroups(list: WebListing[], now: number): Group[] {
+  const live = list
+    .filter((h) => boardStatus(h, now) !== "archived")
+    .map((h) => ({ h, at: h.publishedAt ?? 0 }))
+    .sort((a, b) => b.at - a.at);
+  return dayGroups(live, now, () => "Added");
+}
+
+export type SortKey = "closing" | "starting" | "added";
+export const SORTS: { v: SortKey; name: string }[] = [
+  { v: "closing", name: "Closing soonest" },
+  { v: "starting", name: "Starting soonest" },
+  { v: "added", name: "Recently added" },
+];
+
+/** The timeline for a view: the archive is always by month; upcoming follows the chosen sort. */
+export function boardGroups(
+  list: WebListing[],
+  now: number,
+  view: "upcoming" | "archive",
+  sort: SortKey = "closing",
+): Group[] {
+  if (view === "archive") return archiveGroups(list, now);
+  if (sort === "starting") return startingGroups(list, now);
+  if (sort === "added") return addedGroups(list, now);
+  return upcomingGroups(list, now);
+}
+
 export function archiveGroups(list: WebListing[], now: number): Group[] {
   const items = list
     .filter((h) => boardStatus(h, now) === "archived")
@@ -210,8 +278,16 @@ export interface FilterState {
   team: string;
   theme: string;
   q: string;
+  sort: SortKey;
 }
-export const DEFAULT_FILTERS: FilterState = { where: "any", fee: "any", team: "any", theme: "any", q: "" };
+export const DEFAULT_FILTERS: FilterState = {
+  where: "any",
+  fee: "any",
+  team: "any",
+  theme: "any",
+  q: "",
+  sort: "closing",
+};
 
 interface Opt {
   v: string;
@@ -274,12 +350,27 @@ export function applyFilters(list: WebListing[], s: FilterState, defs = filterDe
 export const isFiltered = (s: FilterState) =>
   s.where !== "any" || s.fee !== "any" || s.team !== "any" || s.theme !== "any";
 
-export function sentenceHtml(s: FilterState, defs: ReturnType<typeof filterDefs>): string {
-  const tok = (k: "where" | "fee" | "team" | "theme") => {
+/**
+ * The filter bar, styled like a flight search: a labelled field per filter, then "Sort by" as the ticket stub.
+ * Each field opens the shared option menu (see client/app.ts). The archive is always by month, so no sort there.
+ */
+export function filterBarHtml(
+  s: FilterState,
+  defs: ReturnType<typeof filterDefs>,
+  view: "upcoming" | "archive",
+  count: number,
+): string {
+  const field = (k: "where" | "fee" | "team" | "theme") => {
     const o = defs[k].opts.find((x) => x.v === s[k]) ?? defs[k].opts[0]!;
-    return `<button class="tok${s[k] !== "any" ? " set" : ""}" data-f="${k}" aria-haspopup="listbox" aria-expanded="false">${esc(o.txt)}${icon("caret-down-bold")}</button>`;
+    return `<button class="fld${s[k] !== "any" ? " set" : ""}" data-f="${k}" aria-haspopup="listbox" aria-expanded="false"><span class="fl mono">${esc(defs[k].label)}</span><span class="fv">${esc(o.name)}</span>${icon("caret-down-bold")}</button>`;
   };
-  return `Hackathons ${tok("where")}, ${tok("fee")}, ${tok("team")}, about ${tok("theme")}.${isFiltered(s) ? '<button class="reset" id="reset">Reset</button>' : ""}`;
+  const sort = SORTS.find((x) => x.v === s.sort) ?? SORTS[0]!;
+  const sortField =
+    view === "upcoming"
+      ? `<button class="fld fsort" data-f="sort" aria-haspopup="listbox" aria-expanded="false"><span class="fl mono">Sort by</span><span class="fv">${esc(sort.name)}</span>${icon("caret-down-bold")}</button>`
+      : "";
+  const meta = `<div class="fmeta mono"><span>${count} ${count === 1 ? "hackathon" : "hackathons"}</span>${isFiltered(s) ? '<button class="reset" id="reset">Reset filters</button>' : ""}</div>`;
+  return `<div class="fbar${sortField ? "" : " no-sort"}"><div class="fgrid">${field("where")}${field("fee")}${field("team")}${field("theme")}</div>${sortField}</div>${meta}`;
 }
 
 // ── Detail (side panel and full page) ──

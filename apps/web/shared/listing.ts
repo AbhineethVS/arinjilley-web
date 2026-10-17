@@ -26,6 +26,7 @@ export type WebListing = Pick<
   | "registerUrl"
   | "posterKind"
   | "posterStyle"
+  | "publishedAt"
 > & {
   /** Full-size poster image (/img/...), if one exists in Telegram. Used for custom posters and link previews. */
   posterUrl: string | null;

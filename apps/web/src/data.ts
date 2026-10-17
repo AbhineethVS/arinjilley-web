@@ -32,6 +32,7 @@ function toWeb(row: Row): WebListing {
     registerUrl: h.registerUrl,
     posterKind: h.posterKind,
     posterStyle: h.posterStyle,
+    publishedAt: h.publishedAt ?? row.createdAt,
     posterUrl: imageUrl(fileReady),
     thumbUrl: imageUrl(row.posterStatus === "ready" ? (row.posterThumbFileId ?? row.posterFileId) : null),
     kerala: isKerala(h),

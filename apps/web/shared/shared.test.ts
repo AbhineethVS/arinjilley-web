@@ -5,10 +5,12 @@ import { isKerala, type WebListing } from "./listing";
 import {
   applyFilters,
   archiveGroups,
+  boardGroups,
   card,
   DEFAULT_FILTERS,
   esc,
   type FilterState,
+  filterBarHtml,
   filterDefs,
   upcomingGroups,
 } from "./render";
@@ -38,6 +40,7 @@ function listing(over: Partial<WebListing> & { slug: string }): WebListing {
     registerUrl: null,
     posterKind: "generated",
     posterStyle: 0,
+    publishedAt: null,
     posterUrl: null,
     thumbUrl: null,
     kerala: false,
@@ -144,5 +147,48 @@ describe("escaping", () => {
     const html = card(listing({ slug: "x", title: "<img src=x onerror=alert(1)>" }), NOW);
     expect(html).not.toContain("<img src=x");
     expect(html).toContain("&lt;img src=x");
+  });
+});
+
+describe("sorting", () => {
+  const list = [
+    listing({ slug: "a", deadline: parseIst("2026-10-30"), start: parseIst("2026-11-20"), publishedAt: 3 }),
+    listing({ slug: "b", deadline: parseIst("2026-11-05"), start: parseIst("2026-11-01"), publishedAt: 1 }),
+    listing({
+      slug: "running",
+      deadline: parseIst("2026-10-28"),
+      start: parseIst("2026-10-15"),
+      publishedAt: 2,
+    }),
+    listing({ slug: "tba", deadline: parseIst("2026-10-25") }),
+  ];
+  const slugs = (g: ReturnType<typeof boardGroups>) => g.flatMap((x) => x.items.map((h) => h.slug));
+
+  it("closing soonest is the default", () => {
+    expect(slugs(boardGroups(list, NOW, "upcoming"))).toEqual(["tba", "running", "a", "b"]);
+  });
+  it("starting soonest groups by event start, ongoing first, undated last", () => {
+    const g = boardGroups(list, NOW, "upcoming", "starting");
+    expect(slugs(g)).toEqual(["running", "b", "a", "tba"]);
+    expect(g.map((x) => x.kicker)).toEqual(["Event started", "Event starts", "Event starts", undefined]);
+    expect(g.at(-1)!.label).toBe("Dates TBA");
+  });
+  it("recently added is newest first", () => {
+    expect(slugs(boardGroups(list, NOW, "upcoming", "added"))).toEqual(["a", "running", "b", "tba"]);
+  });
+  it("the archive ignores the sort", () => {
+    const past = [listing({ slug: "old", deadline: parseIst("2026-09-01") })];
+    expect(slugs(boardGroups(past, NOW, "archive", "added"))).toEqual(["old"]);
+  });
+  it("the bar shows the sort only on upcoming, and Reset only when filtered", () => {
+    const defs = filterDefs(list);
+    const up = filterBarHtml(DEFAULT_FILTERS, defs, "upcoming", 4);
+    expect(up).toContain('data-f="sort"');
+    expect(up).toContain("4 hackathons");
+    expect(up).not.toContain('id="reset"');
+    const ar = filterBarHtml({ ...DEFAULT_FILTERS, fee: "free" }, defs, "archive", 1);
+    expect(ar).not.toContain('data-f="sort"');
+    expect(ar).toContain("1 hackathon<");
+    expect(ar).toContain('id="reset"');
   });
 });

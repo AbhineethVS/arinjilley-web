@@ -1,25 +1,26 @@
 // Browser script. On every page: the flip clock, live countdowns, header border on scroll, copy-link.
-// On the home page: filter sentence, search, Upcoming/Archive tabs and the side panel, re-rendering with the
+// On the home page: filter bar and sort, search, Upcoming/Archive tabs and the side panel, re-rendering with the
 // same functions the server used (shared/render.ts), so what you see never differs from the first load.
 
 import { boardStatus, countdown, istParts } from "@arinjilley/core";
 import type { WebListing } from "../shared/listing";
 import {
   applyFilters,
-  archiveGroups,
+  boardGroups,
   DEFAULT_FILTERS,
   detailHtml,
   emptyHtml,
   esc,
   type FilterState,
+  filterBarHtml,
   filterDefs,
   icon,
   isFiltered,
-  sentenceHtml,
+  SORTS,
+  type SortKey,
   soonHtml,
   statsHtml,
   timelineHtml,
-  upcomingGroups,
 } from "../shared/render";
 import { setupPwa } from "./pwa";
 
@@ -110,7 +111,7 @@ function initHome() {
   let order: string[] = [];
 
   const listEl = $("list")!;
-  const sentence = $("sentence")!;
+  const fbar = $("fbar")!;
   const menu = $("menu")!;
   const panel = $("panel")!;
   const scrim = $("scrim")!;
@@ -119,19 +120,17 @@ function initHome() {
   const q = $<HTMLInputElement>("q")!;
 
   // ── Rendering ──
+  // The list and the bar (its count and Reset) always change together.
   function renderList() {
     const now = Date.now();
     const visible = applyFilters(listings, state, defs);
-    const groups = state.view === "archive" ? archiveGroups(visible, now) : upcomingGroups(visible, now);
+    const groups = boardGroups(visible, now, state.view, state.sort);
     order = groups.flatMap((g) => g.items.map((h) => h.slug));
     listEl.innerHTML = timelineHtml(groups, now, emptyHtml(!!state.q || isFiltered(state), state.view));
-  }
-  function renderSentence() {
-    sentence.innerHTML = sentenceHtml(state, defs);
+    fbar.innerHTML = filterBarHtml(state, defs, state.view, order.length);
   }
   function renderAll() {
     const now = Date.now();
-    renderSentence();
     renderList();
     const soon = $("soon");
     if (soon) soon.innerHTML = soonHtml(listings, now);
@@ -143,8 +142,7 @@ function initHome() {
   if (Date.now() - data.now > 2 * 60_000) renderAll();
   else {
     const now = Date.now();
-    const groups = state.view === "archive" ? archiveGroups(listings, now) : upcomingGroups(listings, now);
-    order = groups.flatMap((g) => g.items.map((h) => h.slug));
+    order = boardGroups(listings, now, state.view).flatMap((g) => g.items.map((h) => h.slug));
   }
 
   function setView(view: "upcoming" | "archive", push: boolean) {
@@ -164,28 +162,41 @@ function initHome() {
   }
 
   // ── Filter menus ──
-  let menuFor: keyof typeof defs | null = null;
+  type MenuKey = keyof typeof defs | "sort";
+  let menuFor: MenuKey | null = null;
   function openMenu(btn: HTMLElement) {
-    const k = btn.dataset.f as keyof typeof defs;
+    const k = btn.dataset.f as MenuKey;
     if (menuFor === k) return closeMenu();
     closeMenu();
     menuFor = k;
     btn.setAttribute("aria-expanded", "true");
-    const now = Date.now();
-    const pool = listings.filter((h) => (boardStatus(h, now) === "archived") === (state.view === "archive"));
-    menu.innerHTML =
-      `<div class="menu-h">${defs[k].label}</div>` +
-      defs[k].opts
-        .map((o) => {
-          const n = applyFilters(pool, { ...state, [k]: o.v }, defs).length;
-          const sel = state[k] === o.v;
-          return `<button class="opt" role="option" data-v="${esc(o.v)}" aria-selected="${sel}" ${n || sel || o.v === "any" ? "" : "disabled"}>${icon("check-bold", "i ck")}${esc(o.name)}<span class="n">${n}</span></button>`;
-        })
-        .join("");
+    if (k === "sort") {
+      menu.innerHTML =
+        `<div class="menu-h">SORT BY</div>` +
+        SORTS.map(
+          (o) =>
+            `<button class="opt" role="option" data-v="${o.v}" aria-selected="${state.sort === o.v}">${icon("check-bold", "i ck")}${esc(o.name)}</button>`,
+        ).join("");
+    } else {
+      const now = Date.now();
+      const pool = listings.filter(
+        (h) => (boardStatus(h, now) === "archived") === (state.view === "archive"),
+      );
+      menu.innerHTML =
+        `<div class="menu-h">${defs[k].label}</div>` +
+        defs[k].opts
+          .map((o) => {
+            const n = applyFilters(pool, { ...state, [k]: o.v }, defs).length;
+            const sel = state[k] === o.v;
+            return `<button class="opt" role="option" data-v="${esc(o.v)}" aria-selected="${sel}" ${n || sel || o.v === "any" ? "" : "disabled"}>${icon("check-bold", "i ck")}${esc(o.name)}<span class="n">${n}</span></button>`;
+          })
+          .join("");
+    }
     menu.classList.add("on");
     if (innerWidth > 720) {
       const r = btn.getBoundingClientRect();
-      menu.style.left = `${Math.max(12, Math.min(r.left - 10, innerWidth - menu.offsetWidth - 12))}px`;
+      menu.style.minWidth = `${Math.max(230, r.width)}px`;
+      menu.style.left = `${Math.max(12, Math.min(r.left, innerWidth - menu.offsetWidth - 12))}px`;
       menu.style.top = `${r.bottom + 8}px`;
     }
     (
@@ -196,21 +207,21 @@ function initHome() {
   }
   function closeMenu(refocus = false) {
     if (!menuFor) return;
-    const tok = sentence.querySelector<HTMLElement>(`.tok[data-f="${menuFor}"]`);
+    const fld = fbar.querySelector<HTMLElement>(`.fld[data-f="${menuFor}"]`);
     menu.classList.remove("on");
-    tok?.setAttribute("aria-expanded", "false");
+    fld?.setAttribute("aria-expanded", "false");
     menuFor = null;
-    if (refocus) tok?.focus({ preventScroll: true });
+    if (refocus) fld?.focus({ preventScroll: true });
   }
   menu.addEventListener("click", (e) => {
     const o = (e.target as HTMLElement).closest<HTMLElement>(".opt");
     if (!o || !menuFor) return;
     const k = menuFor;
-    state[k] = o.dataset.v!;
+    if (k === "sort") state.sort = o.dataset.v as SortKey;
+    else state[k] = o.dataset.v!;
     closeMenu();
-    renderSentence();
     renderList();
-    sentence.querySelector<HTMLElement>(`.tok[data-f="${k}"]`)?.focus({ preventScroll: true });
+    fbar.querySelector<HTMLElement>(`.fld[data-f="${k}"]`)?.focus({ preventScroll: true });
   });
   menu.addEventListener("keydown", (e) => {
     const opts = [...menu.querySelectorAll<HTMLElement>(".opt:not(:disabled)")];
@@ -350,13 +361,12 @@ function initHome() {
   // ── Clicks ──
   document.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
-    if (menuFor && !target.closest(".menu,.tok")) closeMenu();
-    const tok = target.closest<HTMLElement>(".tok");
-    if (tok) return openMenu(tok);
+    if (menuFor && !target.closest(".menu,.fld")) closeMenu();
+    const fld = target.closest<HTMLElement>(".fld");
+    if (fld) return openMenu(fld);
     if (target.closest("#reset, #emptyClear")) {
       Object.assign(state, { where: "any", fee: "any", team: "any", theme: "any" });
       if (q.value) closeFind();
-      renderSentence();
       renderList();
       return;
     }

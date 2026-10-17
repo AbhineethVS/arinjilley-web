@@ -7,13 +7,14 @@ import type { WebListing } from "../shared/listing";
 import {
   archiveGroups,
   art,
+  boardGroups,
   DEFAULT_FILTERS,
   detailHtml,
   emptyHtml,
   esc,
+  filterBarHtml,
   filterDefs,
   icon,
-  sentenceHtml,
   soonHtml,
   statsHtml,
   timelineHtml,
@@ -157,7 +158,7 @@ export function homePage(
   view: "upcoming" | "archive",
   now: number,
 ): string {
-  const groups = view === "archive" ? archiveGroups(list, now) : upcomingGroups(list, now);
+  const groups = boardGroups(list, now, view);
   const upcomingCount = upcomingGroups(list, now).reduce((n, g) => n + g.items.length, 0);
   const archiveCount = archiveGroups(list, now).reduce((n, g) => n + g.items.length, 0);
   const { floats, fan } = heroPosters(list, now);
@@ -191,7 +192,7 @@ export function homePage(
             <button class="find-x" id="findX" aria-label="Close search">${icon("x")}</button>
           </div>
         </div>
-        <p class="sentence" id="sentence">${sentenceHtml(DEFAULT_FILTERS, filterDefs(list))}</p>
+        <div id="fbar">${filterBarHtml(DEFAULT_FILTERS, filterDefs(list), view, view === "archive" ? archiveCount : upcomingCount)}</div>
       </div>
       <div id="list">${timelineHtml(groups, now, emptyHtml(false, view))}</div>
     </section>

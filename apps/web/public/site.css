@@ -526,7 +526,7 @@ button {
   }
 }
 
-/* ───────────── Board header: tabs, search, filter sentence ───────────── */
+/* ───────────── Board header: tabs, search, filter bar ───────────── */
 .bar {
   padding: 6px 0 30px;
   border-bottom: 1px solid var(--border);
@@ -628,50 +628,120 @@ button {
 .find.open .find-btn {
   pointer-events: none;
 }
-.sentence {
-  margin: 16px 0 0;
-  font-size: 17px;
-  line-height: 2;
-  color: var(--t2);
-  text-wrap: pretty;
+/* Filter bar: like a flight search form, with "Sort by" as the ticket stub behind a perforation. */
+.fbar {
+  position: relative;
+  display: flex;
+  margin-top: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
 }
-.tok {
-  display: inline-flex;
-  align-items: center;
+.fgrid {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.fld {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 3px;
-  color: var(--t1);
-  font-weight: 500;
-  border-bottom: 1.5px dashed rgba(255, 255, 255, 0.22);
-  line-height: 1.3;
-  padding: 0 1px;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
+  min-width: 0;
+  padding: 11px 34px 12px 16px;
+  text-align: left;
+  transition: background 0.15s;
 }
-.tok .i {
+.fgrid .fld + .fld {
+  border-left: 1px solid var(--border);
+}
+.fgrid .fld:first-child {
+  border-radius: 13px 0 0 13px;
+}
+.no-sort .fgrid .fld:last-child {
+  border-radius: 0 13px 13px 0;
+}
+.fld:hover,
+.fld[aria-expanded="true"] {
+  background: var(--hover);
+}
+.fl {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.fv {
+  max-width: 100%;
+  font-size: 15px;
+  color: var(--t1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fld > .i {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  margin-top: -6px;
   font-size: 12px;
   color: var(--t3);
   transition: transform 0.15s;
 }
-.tok:hover {
-  border-bottom-color: rgba(255, 255, 255, 0.55);
-}
-.tok.set {
-  color: var(--accent);
-  border-bottom-color: color-mix(in srgb, var(--accent) 55%, transparent);
-}
-.tok.set .i {
-  color: var(--accent);
-}
-.tok[aria-expanded="true"] .i {
+.fld[aria-expanded="true"] > .i {
   transform: rotate(180deg);
 }
-.reset {
-  margin-left: 10px;
-  font-size: 13px;
+.fld.set .fv,
+.fld.set > .i {
+  color: var(--accent);
+}
+.fld.set .fl {
+  color: color-mix(in srgb, var(--accent) 65%, var(--t3));
+}
+.fsort {
+  flex: 0 0 210px;
+  border-left: 1.5px dashed var(--border-strong);
+  border-radius: 0 13px 13px 0;
+}
+/* the two notches of the perforation */
+.fsort::before,
+.fsort::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+}
+.fsort::before {
+  top: -8px;
+  clip-path: inset(50% 0 0 0);
+}
+.fsort::after {
+  bottom: -8px;
+  clip-path: inset(0 0 50% 0);
+}
+.fmeta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--t3);
-  border-bottom: 1px solid transparent;
-  vertical-align: 1px;
+}
+.reset {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--t2);
+  border-bottom: 1px solid var(--border-strong);
 }
 .reset:hover {
   color: var(--t1);
@@ -761,8 +831,58 @@ button {
     width: 100%;
     flex: 1;
   }
-  .sentence {
-    font-size: 16px;
+  .fbar {
+    flex-direction: column;
+  }
+  .fgrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fld {
+    padding: 10px 30px 11px 14px;
+  }
+  .fgrid .fld + .fld {
+    border-left: 0;
+  }
+  .fgrid .fld:nth-child(even) {
+    border-left: 1px solid var(--border);
+  }
+  .fgrid .fld:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
+  .fgrid .fld:first-child {
+    border-radius: 13px 0 0 0;
+  }
+  .fgrid .fld:nth-child(2) {
+    border-radius: 0 13px 0 0;
+  }
+  .no-sort .fgrid .fld:last-child {
+    border-radius: 0 0 13px 0;
+  }
+  .no-sort .fgrid .fld:nth-child(3) {
+    border-radius: 0 0 0 13px;
+  }
+  .fsort {
+    flex: none;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+    border-left: 0;
+    border-top: 1.5px dashed var(--border-strong);
+    border-radius: 0 0 13px 13px;
+  }
+  .fsort::before,
+  .fsort::after {
+    top: -8px;
+    bottom: auto;
+  }
+  .fsort::before {
+    left: -8px;
+    clip-path: inset(0 0 0 50%);
+  }
+  .fsort::after {
+    left: auto;
+    right: -8px;
+    clip-path: inset(0 50% 0 0);
   }
   .menu {
     left: 0 !important;
