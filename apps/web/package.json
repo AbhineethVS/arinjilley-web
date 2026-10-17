@@ -7,7 +7,7 @@
     "dev": "node build.mjs && wrangler pages dev",
     "deploy": "node build.mjs && wrangler pages deploy --project-name arinjilley --branch main --commit-dirty=true",
     "types": "wrangler types",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p sw"
   },
   "devDependencies": {
     "@phosphor-icons/core": "^2.1.1",

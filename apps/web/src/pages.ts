@@ -72,9 +72,14 @@ ${o.noindex ? '<meta name="robots" content="noindex">' : ""}
 <meta property="og:url" content="${esc(canonical)}">
 ${og ? `<meta property="og:image" content="${esc(og)}"><meta name="twitter:card" content="summary_large_image">` : '<meta name="twitter:card" content="summary">'}
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="arinjilley?">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preload" href="/fonts/GeneralSans-500.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/Sentient-500.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/site.css?v=${__BUILD_ID__}">
 <style>${POSTER_CSS}</style>
 <script>${ACCENT_SCRIPT}</script>
 </head>
@@ -92,7 +97,7 @@ ${og ? `<meta property="og:image" content="${esc(og)}"><meta name="twitter:card"
 ${o.body}
 <div class="toast" id="toast" role="status"></div>
 ${o.data !== undefined ? `<script type="application/json" id="data">${safeJson(o.data)}</script>` : ""}
-<script src="/app.js" defer></script>
+<script src="/app.js?v=${__BUILD_ID__}" defer></script>
 </body>
 </html>`;
 }
@@ -107,6 +112,7 @@ function footer(ctx: PageCtx): string {
     <a href="${esc(ctx.groupUrl)}" target="_blank" rel="noopener">WHATSAPP GROUP</a>
     <a href="/archive">ARCHIVE</a>
     <a href="/about">ABOUT</a>
+    <button class="install-btn" data-install hidden>INSTALL APP</button>
   </nav>
 </footer>`;
 }
@@ -251,6 +257,13 @@ export function aboutPage(ctx: PageCtx): string {
     <li>Our admins post new hackathons in the WhatsApp group and here at the same time.</li>
     <li>Every listing is checked by a person before it goes live. Still, rules and dates change, so always confirm on the organiser's page.</li>
     <li>After the deadline passes, listings move to the <a href="/archive">archive</a>.</li>
+  </ul>
+  <h2>Get the app</h2>
+  <p>arinjilley? works as an app on your phone: its own icon, full screen, and the board stays readable even with no signal.</p>
+  <ul>
+    <li><b>Android (Chrome):</b> tap <button class="link-btn" data-install hidden>Install app</button><span class="install-fallback">the ⋮ menu, then <b>Install app</b> (or <b>Add to Home screen</b>)</span>.</li>
+    <li><b>iPhone (Safari):</b> tap the <b>Share</b> button, then <b>Add to Home Screen</b>.</li>
+    <li><b>Laptop (Chrome or Edge):</b> click the install icon at the right end of the address bar.</li>
   </ul>
   <h2>Know a hackathon we missed?</h2>
   <p>Tell us in the WhatsApp group and we'll take a look.</p>

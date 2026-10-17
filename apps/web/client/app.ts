@@ -1,6 +1,7 @@
 // Browser script. On every page: the flip clock, live countdowns, header border on scroll, copy-link.
 // On the home page: filter sentence, search, Upcoming/Archive tabs and the side panel, re-rendering with the
 // same functions the server used (shared/render.ts), so what you see never differs from the first load.
+
 import { boardStatus, countdown, istParts } from "@arinjilley/core";
 import type { WebListing } from "../shared/listing";
 import {
@@ -20,6 +21,7 @@ import {
   timelineHtml,
   upcomingGroups,
 } from "../shared/render";
+import { setupPwa } from "./pwa";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T | null;
 
@@ -89,6 +91,7 @@ window.setInterval(() => {
   clock();
   tickCountdowns();
 }, 1000);
+setupPwa(toast);
 
 // ── Home page ──
 
@@ -98,6 +101,7 @@ function initHome() {
   const data = JSON.parse($("data")!.textContent!) as {
     listings: WebListing[];
     view: "upcoming" | "archive";
+    now: number;
   };
   const listings = data.listings;
   const bySlug = new Map(listings.map((h) => [h.slug, h]));
@@ -134,8 +138,10 @@ function initHome() {
     const stats = $("stats");
     if (stats) stats.innerHTML = statsHtml(listings, now);
   }
-  // The server already rendered the default view; just work out the order for panel navigation.
-  {
+  // The server already rendered the default view; just work out the order for panel navigation. If this page
+  // is an older saved copy (opened offline from the installed app), re-render so statuses and countdowns are current.
+  if (Date.now() - data.now > 2 * 60_000) renderAll();
+  else {
     const now = Date.now();
     const groups = state.view === "archive" ? archiveGroups(listings, now) : upcomingGroups(listings, now);
     order = groups.flatMap((g) => g.items.map((h) => h.slug));

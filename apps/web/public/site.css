@@ -1519,3 +1519,20 @@ button {
     transition: none !important;
   }
 }
+
+/* ───────────── Install app (PWA) ───────────── */
+.install-btn {
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--accent);
+}
+.install-btn:hover {
+  text-decoration: underline;
+}
+.link-btn {
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

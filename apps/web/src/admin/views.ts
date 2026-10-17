@@ -33,8 +33,13 @@ function layout(o: {
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#161618">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/site.css">
-<link rel="stylesheet" href="/admin.css">
+<link rel="manifest" href="/admin.webmanifest">
+<link rel="apple-touch-icon" href="/icons/admin-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="arj? admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="stylesheet" href="/site.css?v=${__BUILD_ID__}">
+<link rel="stylesheet" href="/admin.css?v=${__BUILD_ID__}">
 <style>${POSTER_CSS}</style>
 </head>
 <body data-page="${o.page}">
@@ -48,7 +53,7 @@ function layout(o: {
 ${o.body}
 <div class="toast" id="toast" role="status"></div>
 ${o.data !== undefined ? `<script type="application/json" id="data">${safeJson(o.data)}</script>` : ""}
-<script src="/admin.js" defer></script>
+<script src="/admin.js?v=${__BUILD_ID__}" defer></script>
 </body>
 </html>`;
 }

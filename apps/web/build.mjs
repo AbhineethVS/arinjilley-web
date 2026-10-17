@@ -1,13 +1,15 @@
 // Builds the website for Cloudflare Pages (https://arinjilley.pages.dev) into dist/:
 //   static files (CSS, favicon), self-hosted fonts, the bundled browser script (app.js),
 //   the server code as dist/_worker.js, and _routes.json so static files never run the Worker.
-import { copyFile, cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dist = join(here, "dist");
+// Changes on every build: versions CSS/JS URLs and the service worker's cache.
+const BUILD_ID = Date.now().toString(36);
 const fontsSrc = join(here, "../../packages/core/assets/fonts/fontshare");
 
 let fonts;
@@ -48,7 +50,26 @@ await build({
   platform: "neutral",
   target: "es2022",
   conditions: ["workerd", "worker", "browser"],
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   mainFields: ["module", "main"],
+  legalComments: "none",
+  logLevel: "warning",
+});
+
+// Service worker (offline support + installable app)
+await build({
+  entryPoints: [join(here, "sw/sw.ts")],
+  outfile: join(dist, "sw.js"),
+  bundle: true,
+  minify: true,
+  format: "iife",
+  target: "es2020",
+  define: {
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
+    __FONTS__: JSON.stringify(fonts),
+    // Built into the worker (Pages would redirect a separate offline.html, which breaks pre-caching).
+    __OFFLINE_HTML__: JSON.stringify(await readFile(join(here, "sw/offline.html"), "utf8")),
+  },
   legalComments: "none",
   logLevel: "warning",
 });
@@ -60,10 +81,23 @@ await writeFile(
     {
       version: 1,
       include: ["/*"],
-      exclude: ["/site.css", "/admin.css", "/app.js", "/admin.js", "/favicon.svg", "/fonts/*"],
+      exclude: [
+        "/site.css",
+        "/admin.css",
+        "/app.js",
+        "/admin.js",
+        "/sw.js",
+        "/favicon.svg",
+        "/manifest.webmanifest",
+        "/admin.webmanifest",
+        "/fonts/*",
+        "/icons/*",
+      ],
     },
     null,
     2,
   ),
 );
-console.log(`web build: dist/ ready (${fonts.length} fonts, app.js, _worker.js)`);
+console.log(
+  `web build ${BUILD_ID}: dist/ ready (${fonts.length} fonts, app.js, admin.js, sw.js, _worker.js)`,
+);

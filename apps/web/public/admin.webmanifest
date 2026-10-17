@@ -1,0 +1,28 @@
+{
+  "id": "/admin",
+  "name": "arinjilley? admin",
+  "short_name": "arj? admin",
+  "description": "Add, edit and publish hackathons for the arinjilley? board.",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "background_color": "#161618",
+  "theme_color": "#161618",
+  "icons": [
+    { "src": "/icons/admin-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/admin-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/admin-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "New hackathon",
+      "url": "/admin/new",
+      "icons": [{ "src": "/icons/admin-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Drafts",
+      "url": "/admin?tab=drafts",
+      "icons": [{ "src": "/icons/admin-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -174,6 +174,12 @@ Link previews (WhatsApp, etc.) use the **poster** as the image.
 - **Admins** (owner only): add or remove admins by Telegram ID.
 - Same design system as the public site and fully usable on a phone. Not indexed by search engines.
 
+### 8.6 Installable app (PWA), added 18 Oct
+- **Two installable apps**: the public site (, “arinjilley?”, shortcuts to Archive and About) and the admin page (, “arinjilley? admin”, scope , shortcuts to New hackathon and Drafts). Each has its own icons (, “a?” in Sentient with a lime “?”; the admin icon adds “ADMIN”).
+- **Service worker** ( → ): pages are network-first, falling back to the last saved copy after 4 s or offline, else a built-in offline page. Fonts, CSS, JS and icons are cache-first, and CSS/JS URLs carry a per-build ID so deploys are picked up. Poster images are cache-first (120 max).  is never cached.
+- An “Install app” button shows only where the browser supports it (Chrome, Edge, Android); the About page explains iPhone (Share → Add to Home Screen). The site shows a notice when you're offline.
+- Gotcha: Cloudflare Pages redirects  to pretty URLs, so the offline page is built into  instead of being a separate file.
+
 ## 9. Design system: "dark grey, done really well"
 
 **Principles** (from the Luma screenshots): every card has the same layout; hierarchy comes from size and shades of grey; colour only where it means something; icon tile + two lines; calm surfaces; you never lose your place.

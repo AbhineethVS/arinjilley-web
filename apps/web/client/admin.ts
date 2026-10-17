@@ -1,8 +1,10 @@
 // Admin page script: login polling, dashboard search, the listing editor (live poster + WhatsApp previews,
 // Fill with AI, image upload, save/publish) and the admins page.
+
 import { type Hackathon, shortPrize, slugify, whatsappText } from "@arinjilley/core";
 import { posterMarkup, shuffleStyle } from "@arinjilley/core/poster";
 import { type DateParts, fromParts, type ListingForm, type PosterChoice } from "../shared/form";
+import { setupPwa } from "./pwa";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T | null;
 const page = document.body.dataset.page;
@@ -503,3 +505,4 @@ if (page === "admin-login") initLogin();
 if (page === "admin-dash") initDashboard();
 if (page === "admin-edit") initEditor();
 if (page === "admin-admins") initAdmins();
+setupPwa(toast);
