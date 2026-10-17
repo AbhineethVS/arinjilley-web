@@ -167,7 +167,6 @@ export function homePage(
     <div id="floats">${floats}</div>
     <div class="hero-text">
       ${fan ? `<div class="hero-fan" aria-hidden="true">${fan}</div>` : ""}
-      <div class="eyebrow mono">HACKATHONS · SORTED BY DEADLINE</div>
       <h1 class="display">Hackathons worth<br><span class="acc">applying to.</span></h1>
       <p>We find hackathons, check the details, and line them up by deadline, so you apply before registration closes.</p>
       <div class="hero-cta">
