@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@arinjilley/core": "*",
+    "@cloudflare/puppeteer": "^1.4.0",
     "drizzle-orm": "^0.45.4",
     "grammy": "^1.46.0"
   }

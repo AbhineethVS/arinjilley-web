@@ -212,14 +212,14 @@ Link previews (WhatsApp, etc.) use the **poster** as the image.
 | Admin login | Telegram Login Widget, signature checked on the server, signed session cookie |
 | AI | **OpenAI** (cheapest nano-class model) → Cloudflare Workers AI → rules (chrono-node). Output validated with **Zod** |
 | Reading links | Cloudflare's built-in HTMLRewriter (page title, description, image, text) |
-| Posters | **Satori** (HTML → SVG) + **resvg** (SVG → PNG), with the boarding-pass template and our fonts |
+| Posters | The boarding-pass poster is an HTML/CSS page (same code as the mock-up), screenshotted by **Cloudflare Browser Rendering** (free: 10 browser-minutes/day, about 7–15 s per poster). Rendering inside the Worker (Satori + resvg) was tested and exceeds the free plan's 10 ms CPU limit (error 1102) |
 | Images | Stored in **Telegram** (uploaded posters and generated ones). We keep the file ID and serve images through our own `/img/...` link with long caching. No R2 needed |
 | Fonts / icons | Sentient, General Sans, JetBrains Mono and the Phosphor icons we use, all self-hosted |
 | Tooling | Wrangler (local dev + deploy), Vitest, Biome |
 | Domain | `*.workers.dev` for free; optional custom domain (~₹800/yr) |
 | Secrets | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `OPENAI_API_KEY`, `SESSION_SECRET`: set with `wrangler secret put` or a git-ignored `.dev.vars` file, never committed
 
-**Known risk:** the Workers free plan allows only ~10 ms of CPU per request, and generating a poster image may need more. We test this first. Fallback: generate posters with a free GitHub Action triggered on Approve (adds ~30–60 s), or on Vercel's free OG-image tooling.
+**Poster rendering (tested 17 Oct):** generating PNGs inside the Worker exceeded the free CPU limit on every request, so posters are rendered by Cloudflare Browser Rendering instead. Free limits: 10 browser-minutes/day, 1 new browser per 20 s (sessions are reused for 60 s). If the daily limit is ever hit, the poster is retried later; listings still go live without waiting.
 
 ## 12. Not in v1
 Automatic WhatsApp capture · reading text inside posters/PDFs · special handling for lists · repost/bump feature · light mode · visitor accounts or notifications.

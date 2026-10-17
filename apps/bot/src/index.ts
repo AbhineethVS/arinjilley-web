@@ -1,6 +1,6 @@
-import { renderPosterPng } from "@arinjilley/core/poster";
 import { type Bot, webhookCallback } from "grammy";
 import { type BotContext, createBot } from "./bot";
+import { RenderBusyError, renderPosterPng } from "./render";
 import { SAMPLES } from "./samples";
 
 // One bot instance per Worker isolate (grammY fetches the bot's info once, then reuses it).
@@ -32,8 +32,13 @@ export default {
       const style = url.searchParams.has("style")
         ? Number(url.searchParams.get("style"))
         : sample.posterStyle;
-      const png = await renderPosterPng({ ...sample, posterStyle: style });
-      return new Response(png, { headers: { "content-type": "image/png", "cache-control": "no-store" } });
+      try {
+        const png = await renderPosterPng(env, { ...sample, posterStyle: style });
+        return new Response(png, { headers: { "content-type": "image/png", "cache-control": "no-store" } });
+      } catch (err) {
+        if (err instanceof RenderBusyError) return new Response(err.message, { status: 429 });
+        throw err;
+      }
     }
 
     if (url.pathname === "/") return new Response("arinjilley? bot is running.\n");

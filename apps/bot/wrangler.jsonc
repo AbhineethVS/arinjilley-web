@@ -15,10 +15,10 @@
     {
       "binding": "DB",
       "database_name": "arinjilley",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "81ff0986-2c48-4660-a128-c1dfd0cbca88",
       "migrations_dir": "../../migrations"
     }
   ],
-  // Font files are imported as ArrayBuffers for the poster renderer.
-  "rules": [{ "type": "Data", "globs": ["**/*.woff", "**/*.ttf"], "fallthrough": true }]
+  // Cloudflare Browser Rendering (free: 10 browser-minutes/day), used to screenshot posters.
+  "browser": { "binding": "BROWSER" }
 }
