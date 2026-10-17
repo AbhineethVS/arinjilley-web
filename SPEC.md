@@ -180,6 +180,9 @@ Link previews (WhatsApp, etc.) use the **poster** as the image.
 - An “Install app” button shows only where the browser supports it (Chrome, Edge, Android); the About page explains iPhone (Share → Add to Home Screen). The site shows a notice when you're offline.
 - Gotcha: Cloudflare Pages redirects `*.html` to pretty URLs, so the offline page (`apps/web/sw/offline.html`) is built into `sw.js` instead of being a separate file.
 
+### 8.7 Logo (18 Oct)
+A split-flap tile (departure board, matching the flip clock and boarding-pass posters) showing a question mark whose dot is a lime text cursor. Sources and exports live in `brand/` (see `brand/README.md`). It is used for the favicon, the app icons (including the admin variant labelled ADMIN), next to the wordmark in the site and admin headers and footer, and as the Telegram bot / WhatsApp group avatar.
+
 ## 9. Design system: "dark grey, done really well"
 
 **Principles** (from the Luma screenshots): every card has the same layout; hierarchy comes from size and shades of grey; colour only where it means something; icon tile + two lines; calm surfaces; you never lose your place.

@@ -2,6 +2,7 @@
 // public site; client/admin.ts adds the interactive parts (login polling, live previews, Fill with AI, saving).
 import { boardStatus, countdown, deadlineInstant, fullDate, type Hackathon } from "@arinjilley/core";
 import { POSTER_CSS } from "@arinjilley/core/poster";
+import { LOGO_MARK } from "../../shared/brand";
 import type { ListingForm } from "../../shared/form";
 import { esc, icon } from "../../shared/render";
 import type { Admin } from "./session";
@@ -45,7 +46,7 @@ function layout(o: {
 <body data-page="${o.page}">
 <header class="top scrolled">
   <div class="wrap top-in">
-    <a href="/admin" class="logo">arinjilley<span class="q">?</span> <span class="admin-badge mono">ADMIN</span></a>
+    <a href="/admin" class="logo">${LOGO_MARK}<span>arinjilley<span class="q">?</span></span><span class="admin-badge mono">ADMIN</span></a>
     ${nav}
     ${o.admin ? `<form class="top-right" method="post" action="/admin/logout"><span class="who mono">${esc(o.admin.name ?? (o.admin.role === "owner" ? "Owner" : "Admin"))}</span><button class="btn btn-ghost btn-sm" type="submit">Log out</button></form>` : ""}
   </div>

@@ -2,6 +2,7 @@
 // the side panel, re-rendering with the same functions from shared/render.ts.
 import { deadlineInstant } from "@arinjilley/core";
 import { POSTER_CSS } from "@arinjilley/core/poster";
+import { LOGO_MARK } from "../shared/brand";
 import type { WebListing } from "../shared/listing";
 import {
   archiveGroups,
@@ -86,7 +87,7 @@ ${og ? `<meta property="og:image" content="${esc(og)}"><meta name="twitter:card"
 <body data-page="${o.page}">
 <header class="top" id="top">
   <div class="wrap top-in">
-    <a href="/" class="logo" aria-label="arinjilley? home">arinjilley<span class="q">?</span></a>
+    <a href="/" class="logo" aria-label="arinjilley? home">${LOGO_MARK}<span>arinjilley<span class="q">?</span></span></a>
     <nav class="nav" aria-label="Main">${nav("home", "/", "Hackathons")}${nav("archive", "/archive", "Archive")}${nav("about", "/about", "About")}</nav>
     <div class="top-right">
       <div class="clock mono" aria-label="Current time in India"><span class="flaps" id="clock"></span><span class="tz">IST</span></div>
@@ -105,7 +106,7 @@ ${o.data !== undefined ? `<script type="application/json" id="data">${safeJson(o
 function footer(ctx: PageCtx): string {
   return `<footer class="foot">
   <div>
-    <div class="logo">arinjilley<span class="q" style="color:var(--accent)">?</span></div>
+    <div class="logo">${LOGO_MARK}<span>arinjilley<span class="q" style="color:var(--accent)">?</span></span></div>
     <p>A student-run club that shares hackathons. Listings are checked by our admins, but always confirm details on the organiser's page.</p>
   </div>
   <nav class="mono" aria-label="Footer">

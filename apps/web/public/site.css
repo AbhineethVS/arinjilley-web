@@ -1641,3 +1641,19 @@ button {
 .d-by {
   min-width: 0;
 }
+
+/* Logo: split-flap mark + wordmark */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.logo-mark {
+  width: auto;
+  height: 1.25em;
+  flex: none;
+  display: block;
+}
+.foot .logo .logo-mark {
+  height: 1.15em;
+}
