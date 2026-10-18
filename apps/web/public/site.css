@@ -226,22 +226,30 @@ button {
 
 /* ───────────── Top bar ───────────── */
 .top {
+  /* This visit's accent, heavily muted into the page colour. */
+  --top-bg: color-mix(in srgb, var(--accent) 12%, var(--bg));
   position: sticky;
   top: 0;
   z-index: 30;
-  /* At the top of the page the bar is see-through, so it's one surface with the page (no line, no tint).
-     Once you scroll, it frosts over the content in the page's own colour, with a soft shadow instead of a border. */
-  background: transparent;
-  transition:
-    background-color 0.25s,
-    box-shadow 0.25s,
-    backdrop-filter 0.25s;
+  background: var(--top-bg);
+  transition: background-color 0.25s;
 }
+/* Instead of a border, the tint fades into the page below the bar. */
+.top::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 36px;
+  background: linear-gradient(var(--top-bg), transparent);
+  pointer-events: none;
+}
+/* Once scrolled, the same tint goes slightly see-through and frosts over the content. */
 .top.scrolled {
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  --top-bg: color-mix(in srgb, color-mix(in srgb, var(--accent) 12%, var(--bg)) 86%, transparent);
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
   backdrop-filter: blur(14px) saturate(1.4);
-  box-shadow: 0 12px 28px -18px rgba(0, 0, 0, 0.85);
 }
 .top .nav a[aria-current="page"] {
   background: color-mix(in srgb, var(--accent) 14%, var(--raised));
