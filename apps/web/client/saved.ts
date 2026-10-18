@@ -270,15 +270,22 @@ export function setupFolder(listings: WebListing[], tick: () => void) {
     if (isOpen() && !tray.contains(t) && !folder.contains(t) && !pill.contains(t)) setOpen(false);
   });
 
-  // Out of the way while the hero (which already shows posters) is on screen.
+  // Laptops: out of the way while the hero (which already shows posters) is on screen. Phones: always shown.
   const hero = document.getElementById("hero");
+  const phone = matchMedia("(max-width: 720px)");
   if (hero && "IntersectionObserver" in window) {
-    new IntersectionObserver(([entry]) => {
-      const away = !!entry?.isIntersecting;
+    let heroOnScreen = false;
+    const update = () => {
+      const away = heroOnScreen && !phone.matches;
       folder.classList.toggle("away", away);
       pill.classList.toggle("away", away);
       if (away && isOpen()) setOpen(false);
+    };
+    new IntersectionObserver(([entry]) => {
+      heroOnScreen = !!entry?.isIntersecting;
+      update();
     }).observe(hero);
+    phone.addEventListener("change", update);
   } else {
     folder.classList.remove("away");
     pill.classList.remove("away");

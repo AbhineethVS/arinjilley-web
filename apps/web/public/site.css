@@ -2484,7 +2484,11 @@ html.lock .fd-pill {
   gap: 6px;
   font-size: 13px;
   color: var(--t3);
-  white-space: nowrap;
+}
+.foot .credit-t {
+  text-align: center;
+  line-height: 1.7;
+  text-wrap: balance;
 }
 .foot .credit::before,
 .foot .credit::after {
@@ -2495,8 +2499,15 @@ html.lock .fd-pill {
   margin: 0 10px;
   background: var(--border-strong);
 }
+@media (max-width: 720px) {
+  .foot .credit::before,
+  .foot .credit::after {
+    display: none;
+  }
+}
 .foot .credit .heart {
   display: inline-flex;
+  vertical-align: -2px;
   color: var(--accent);
 }
 .foot .credit .heart .i {
