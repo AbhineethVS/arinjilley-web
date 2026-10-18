@@ -1985,6 +1985,69 @@ html.lock .fd-pill {
   }
 }
 
+/* Phones: the folder rests on the sheet's top edge. Once the sheet has landed (.lift), the flap swings open and
+   the saved posters rise out of it. Desktop has the big corner folder instead. */
+.tray-fd {
+  display: none;
+}
+@media (max-width: 720px) {
+  .tray.on {
+    animation: sheet-up 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  @keyframes sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  .tray-fd {
+    --fd-back: #000;
+    --fd-back-shadow: inset 0 0 6px 2px rgba(255, 255, 255, 0.37);
+    --fd-flap-fill: #292929;
+    --fd-flap-opacity: 0.25;
+    --fd-flap-stroke: #979797;
+    display: block;
+    position: absolute;
+    left: 50%;
+    /* Drawn at full size and scaled from its bottom edge, which sits 46px inside the sheet. */
+    top: calc(46px - 270px);
+    width: 321px;
+    height: 270px;
+    margin-left: -160.5px;
+    transform: scale(0.44);
+    transform-origin: 50% 100%;
+    pointer-events: none;
+  }
+  .tray-fd .fd-label {
+    display: none;
+  }
+  .tray-fd.lift .fd-flap {
+    transform: translate(-50%, -50%) rotateX(-58deg);
+  }
+  .tray-fd.lift .fd-card-1 {
+    transform: translate(-50%, -50%) translate(78px, -118px) rotate(14deg);
+    transition-delay: 0.12s;
+  }
+  .tray-fd.lift .fd-card-2 {
+    transform: translate(-50%, -50%) translate(0, -138px) rotate(-1deg);
+    transition-delay: 0.06s;
+  }
+  .tray-fd.lift .fd-card-3 {
+    transform: translate(-50%, -50%) translate(-80px, -122px) rotate(-13deg);
+  }
+  /* Room for the folder's lower half, and the title centred under it. */
+  .tray-h {
+    padding-top: 58px;
+    text-align: center;
+    justify-content: center;
+    position: relative;
+  }
+  .tray-h #trayX {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+}
+
 /* ───────────── Save toggle on cards ───────────── */
 .card-w {
   position: relative;
@@ -2437,6 +2500,42 @@ html.lock .fd-pill {
 }
 
 /* ───────────── About / 404 ───────────── */
+/* "—— Built with ♥ by … ——" at the end of the About page. */
+.prose .credit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 56px 0 0;
+  font-size: 14px;
+  color: var(--t3);
+  white-space: nowrap;
+}
+.prose .credit::before,
+.prose .credit::after {
+  content: "";
+  flex: 1;
+  max-width: 120px;
+  height: 1px;
+  margin: 0 10px;
+  background: var(--border-strong);
+}
+.prose .credit .heart {
+  display: inline-flex;
+  color: var(--accent);
+}
+.prose .credit .heart .i {
+  font-size: 15px;
+}
+.prose p.credit a {
+  color: var(--t1);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong);
+  transition: border-color 0.15s;
+}
+.prose p.credit a:hover {
+  border-bottom-color: var(--accent);
+}
 .prose {
   max-width: 640px;
   margin: 0 auto;

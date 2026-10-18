@@ -42,7 +42,7 @@ const REGULAR = [
   "x",
 ];
 const BOLD = ["caret-down", "check"];
-const FILL = ["bookmark-simple"];
+const FILL = ["bookmark-simple", "heart"];
 
 const inner = (file) => {
   const svg = readFileSync(join(root, "assets", file), "utf8");

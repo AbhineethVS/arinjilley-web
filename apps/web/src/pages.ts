@@ -3,6 +3,7 @@
 import { deadlineInstant } from "@arinjilley/core";
 import { POSTER_CSS } from "@arinjilley/core/poster";
 import { LOGO_MARK } from "../shared/brand";
+import { folderArt } from "../shared/folder";
 import type { WebListing } from "../shared/listing";
 import {
   archiveGroups,
@@ -159,20 +160,10 @@ function heroPosters(list: WebListing[], now: number): string {
 
 // "Your folder" in the corner: saved hackathons (client/saved.ts fills it in). Folder artwork from Uiverse.io
 // by junaid_3671. Phones get a small pill instead. Both open the same tray.
-const FOLDER_PATH =
-  "M0 25C0 11.1929 11.1929 0 25 0H136.084C143.044 0 149.689 2.90139 154.42 8.00608L178.08 33.5343C182.811 38.639 189.456 41.5404 196.416 41.5404H296C309.807 41.5404 321 52.7333 321 66.5404V216C321 229.807 309.807 241 296 241H25C11.1929 241 0 229.807 0 216V25Z";
 function folderShell(): string {
   return `<div class="fd away none" id="folder">
   <button type="button" class="fd-toggle" id="folderBtn" aria-expanded="false" aria-controls="tray">Your folder</button>
-  <div class="fd-stage" aria-hidden="true">
-    <div class="fd-back"></div>
-    <div class="fd-cards" id="fdCards"></div>
-    <div class="fd-flap">
-      <div class="fd-flap-blur" style="clip-path:path('${FOLDER_PATH}');-webkit-clip-path:path('${FOLDER_PATH}')"></div>
-      <svg viewBox="0 0 321 241" width="321" height="241"><path d="${FOLDER_PATH}" fill="var(--fd-flap-fill)" fill-opacity="var(--fd-flap-opacity)" stroke="var(--fd-flap-stroke)"/></svg>
-      <span class="fd-label mono"><i class="fd-dot"></i><span id="fdLabel">SAVED</span></span>
-    </div>
-  </div>
+  ${folderArt([], "SAVED", true)}
 </div>
 <button type="button" class="fd-pill away none" id="fdPill" aria-expanded="false" aria-controls="tray">${icon("folder-simple")}<span id="fdPillLabel">Saved</span></button>
 <div class="tray-scrim" id="trayScrim"></div>
@@ -298,6 +289,7 @@ export function aboutPage(ctx: PageCtx): string {
   <h2>Know a hackathon we missed?</h2>
   <p>Tell us in the WhatsApp group and we'll take a look.</p>
   <p><a class="btn btn-primary" href="${esc(ctx.groupUrl)}" target="_blank" rel="noopener">${icon("whatsapp-logo")}Join the WhatsApp group</a></p>
+  <p class="credit">Built with <span class="heart" aria-label="love">${icon("heart-fill")}</span> by <a href="https://github.com/AbhineethVS" target="_blank" rel="noopener">Abhineeth V S</a></p>
 </main>
 <div class="wrap">${footer(ctx)}</div>`;
   return layout(ctx, {

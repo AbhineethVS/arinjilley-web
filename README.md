@@ -65,13 +65,15 @@ Dr. Ambedkar Institute of Technology, Bengaluru
 
 <table>
 <tr>
-<td width="50%"><img src="docs/images/home-mobile.png" alt="Home page on a phone"></td>
-<td width="50%"><img src="docs/images/detail-mobile.png" alt="A hackathon page on a phone"></td>
+<td width="33%"><img src="docs/images/home-mobile.png" alt="Home page on a phone"></td>
+<td width="33%"><img src="docs/images/detail-mobile.png" alt="A hackathon page on a phone"></td>
+<td width="33%"><img src="docs/images/folder-mobile.png" alt="Your folder of saved hackathons"></td>
 </tr>
 </table>
 
 - **Sorted by deadline**, with a countdown, so you can see at a glance what's closing next.
-- **Filters** for online or in person, free entry, solo or team, and topic.
+- **Filters and sorting**: online or in person, free entry, solo or team, topic. Sort by closing soonest, starting soonest or recently added.
+- **Save hackathons to your folder** and see their countdowns in one place. No account needed.
 - **Add to Google Calendar** so you get reminded before registration closes.
 - **Install it like an app** on your phone. It even opens without internet.
 
