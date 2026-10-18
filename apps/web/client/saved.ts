@@ -284,6 +284,16 @@ export function setupFolder(listings: WebListing[], tick: () => void) {
     pill.classList.remove("away");
   }
 
+  // Fade away at the footer, so the folder never covers its links.
+  const foot = document.querySelector(".foot");
+  if (foot && "IntersectionObserver" in window) {
+    new IntersectionObserver(([entry]) => {
+      const atFoot = !!entry?.isIntersecting;
+      folder.classList.toggle("at-foot", atFoot);
+      pill.classList.toggle("at-foot", atFoot);
+    }).observe(foot);
+  }
+
   changeHandlers.push(() => {
     render();
     // A little bounce so you see where it went.

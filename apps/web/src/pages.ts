@@ -118,6 +118,7 @@ function footer(ctx: PageCtx): string {
     <a href="/about">ABOUT</a>
     <button class="install-btn" data-install hidden>INSTALL APP</button>
   </nav>
+  <p class="credit">Built with <span class="heart" aria-label="love">${icon("heart-fill")}</span> by <a href="https://github.com/AbhineethVS" target="_blank" rel="noopener">Abhineeth V S</a></p>
 </footer>`;
 }
 
@@ -289,7 +290,6 @@ export function aboutPage(ctx: PageCtx): string {
   <h2>Know a hackathon we missed?</h2>
   <p>Tell us in the WhatsApp group and we'll take a look.</p>
   <p><a class="btn btn-primary" href="${esc(ctx.groupUrl)}" target="_blank" rel="noopener">${icon("whatsapp-logo")}Join the WhatsApp group</a></p>
-  <p class="credit">Built with <span class="heart" aria-label="love">${icon("heart-fill")}</span> by <a href="https://github.com/AbhineethVS" target="_blank" rel="noopener">Abhineeth V S</a></p>
 </main>
 <div class="wrap">${footer(ctx)}</div>`;
   return layout(ctx, {

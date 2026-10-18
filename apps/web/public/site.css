@@ -76,6 +76,9 @@
 *::after {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 html {
   -webkit-text-size-adjust: 100%;
   color-scheme: dark;
@@ -1600,7 +1603,7 @@ html:not(.tw) .hero h1 .acc,
   scale: 0.3;
   pointer-events: none;
   transition:
-    opacity 0.2s 0.15s,
+    opacity 0.35s 0.15s,
     scale 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1) 0.15s,
     translate 0.25s;
 }
@@ -1616,6 +1619,7 @@ html:not(.tw) .hero h1 .acc,
 }
 /* Out of the way while the hero is on screen, while the details panel is open, and when there's nothing to show. */
 .fd.away,
+.fd.at-foot,
 html.lock .fd {
   opacity: 0;
   translate: 0 16px;
@@ -1790,7 +1794,7 @@ html.lock .fd {
   gap: 8px;
   height: 42px;
   padding: 0 16px 0 14px;
-  border-radius: 999px;
+  border-radius: 12px;
   font-size: 14px;
   color: var(--t1);
   background: color-mix(in srgb, var(--raised) 80%, transparent);
@@ -1810,6 +1814,7 @@ html.lock .fd {
   color: var(--accent);
 }
 .fd-pill.away,
+.fd-pill.at-foot,
 html.lock .fd-pill {
   opacity: 0;
   translate: 0 16px;
@@ -1831,8 +1836,8 @@ html.lock .fd-pill {
     scale: 1;
     pointer-events: auto;
     transition:
-      opacity 0.25s,
-      translate 0.25s;
+      opacity 0.4s,
+      translate 0.4s;
   }
   /* Bigger label so it's still readable at this size. */
   .fd .fd-label {
@@ -2468,19 +2473,21 @@ html.lock .fd-pill {
 }
 
 /* ───────────── About / 404 ───────────── */
-/* "—— Built with ♥ by … ——" at the end of the About page. */
-.prose .credit {
+/* "—— Built with ♥ by … ——", centred at the very bottom of the footer on every page. */
+.foot .credit {
+  flex-basis: 100%;
+  max-width: none;
+  margin: 18px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin: 56px 0 0;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--t3);
   white-space: nowrap;
 }
-.prose .credit::before,
-.prose .credit::after {
+.foot .credit::before,
+.foot .credit::after {
   content: "";
   flex: 1;
   max-width: 120px;
@@ -2488,20 +2495,20 @@ html.lock .fd-pill {
   margin: 0 10px;
   background: var(--border-strong);
 }
-.prose .credit .heart {
+.foot .credit .heart {
   display: inline-flex;
   color: var(--accent);
 }
-.prose .credit .heart .i {
+.foot .credit .heart .i {
   font-size: 15px;
 }
-.prose p.credit a {
+.foot .credit a {
   color: var(--t1);
   text-decoration: none;
   border-bottom: 1px solid var(--border-strong);
   transition: border-color 0.15s;
 }
-.prose p.credit a:hover {
+.foot .credit a:hover {
   border-bottom-color: var(--accent);
 }
 .prose {
