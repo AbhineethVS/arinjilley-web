@@ -10,7 +10,7 @@
     "SITE_URL": "https://arinjilley.pages.dev",
     "GROUP_URL": "https://chat.whatsapp.com/HRgBh8m962qGtkhIbVu9WH",
     // Cloudflare Web Analytics site token (public, it's in every page). Empty = analytics off.
-    "CF_ANALYTICS_TOKEN": "",
+    "CF_ANALYTICS_TOKEN": "b6365adb0adc440ab6d27885313f378d",
     // Admin page login goes through the bot; the owner can manage admins.
     "BOT_USERNAME": "arinjilley_bot",
     "OWNER_TELEGRAM_ID": "7204471811",
