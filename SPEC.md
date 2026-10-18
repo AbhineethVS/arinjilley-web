@@ -153,7 +153,7 @@ Lines with no data are left out. Rolling listings show "⏳ *Registration:* open
   - Opened, a tray lists them: poster, title, live countdown, **Register ↗**, **Remove**, and **Add all deadlines to calendar** (one `.ics` with a reminder a day before each). The corner normally shows just a small "Saved · 2" pill; on desktop, hovering it (or keyboard focus) grows the full folder artwork out of the corner, and it tucks back when the mouse leaves. Phones show the original folder artwork, small (~96 px wide), in the corner instead of the pill, also over the hero (laptops hide it there); tapping it slides up the list as a bottom sheet. The folder and pill fade away when the footer comes into view, so they never cover its links.
   - Deadline reminders (push notifications) are planned on top of this.
 
-- **Footer** (every page): club blurb, links, and at the very bottom, centred: "—— Built with ♥ by Abhineeth, Asil, Abhijithu and Irfan ——" (heart in the accent colour; Abhineeth links to GitHub, the others to LinkedIn; wraps centred on phones).
+- **Footer** (every page): club blurb, links, and at the very bottom, centred: "—— Built with ♥ by Abhineeth V S ——" (heart in the accent colour; the name links to github.com/AbhineethVS).
 
 - **Analytics**: Cloudflare Web Analytics (free, no cookies, no consent banner) on public pages only, never /admin. Enabled by putting the site token in `CF_ANALYTICS_TOKEN` (apps/web/wrangler.jsonc); empty = off.
 
@@ -168,7 +168,7 @@ Lines with no data are left out. Rolling listings show "⏳ *Registration:* open
 Sorted by deadline (soonest first), ties broken by event start.
 
 ### 8.4 Hackathon detail
-Opening a hackathon from a card morphs its poster into the panel's poster while the panel slides in (View Transitions API; plain slide where unsupported or with reduced motion), and back on close.
+Opening a hackathon: on laptops the panel slides in from the right edge (and back out on close); on phones the full-screen panel fades in and out. (A poster-morph transition was tried and dropped: it misbehaved after stepping with the arrows.)
 **Share** (panel top bar and the hackathon page): on phones the native share sheet with the poster attached and a short emoji message + link; on laptops it copies the message and link.
 The side panel is frosted glass (the board shows through, blurred) over a light scrim; on phones it's more opaque for reading.
 Poster → title → "by Organiser" → icon tiles: **Deadline · Dates · Location/Online · Team · Prize · Fee · Who can join** → countdown pill _"Registration closes in **2d 5h**"_ → summary, how it works, themes.

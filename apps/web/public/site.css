@@ -2112,21 +2112,23 @@ html.lock .fd-pill {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 30px 90px rgba(0, 0, 0, 0.55);
-  transform: translateX(28px);
-  opacity: 0;
+  /* Laptops: a drawer that slides in from the right edge and back out. */
+  transform: translateX(calc(100% + 24px));
   visibility: hidden;
   transition:
-    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 0.18s,
-    visibility 0s linear 0.24s;
+    transform 0.34s cubic-bezier(0.32, 0.72, 0, 1),
+    visibility 0s linear 0.34s;
 }
 .panel.on {
   transform: none;
-  opacity: 1;
   visibility: visible;
-  transition:
-    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 0.18s;
+  transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .panel.on {
+    transition: none;
+  }
 }
 .pbar {
   display: flex;
@@ -2388,8 +2390,16 @@ html.lock .fd-pill {
     width: auto;
     border: 0;
     border-radius: 0;
-    transform: translateY(18px);
+    transform: none;
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      visibility 0s linear 0.2s;
     background: color-mix(in srgb, var(--surface) 86%, transparent);
+  }
+  .panel.on {
+    opacity: 1;
+    transition: opacity 0.2s ease;
   }
   .pbar .x-d {
     display: none;
@@ -2761,93 +2771,4 @@ html.lock .fd-pill {
 }
 .foot .logo .logo-mark {
   height: 1.15em;
-}
-
-/* ───────────── Card → panel morph (View Transitions; see client/app.ts) ───────────── */
-/* Only the poster is lifted out and morphed. The rest of the page (panel, scrim) is shown live, so the panel's
-   frosted glass is real throughout instead of snapping in at the end. */
-::view-transition-old(root) {
-  animation: none;
-  display: none;
-}
-::view-transition-new(root) {
-  animation: none;
-}
-/* During the morph the panel only fades (no slide), so the flying poster lands exactly where the panel's
-   poster is. */
-html.vt .panel {
-  transform: none;
-  transition:
-    opacity 0.24s ease,
-    visibility 0s linear 0.24s;
-}
-html.vt .panel.on {
-  transition: opacity 0.24s ease;
-}
-/* Closing: the flying poster stands in for the panel's own, so hide that one once the panel is closing (after
-   the "before" snapshot), so there's no ghost of it in the fading panel. */
-html.vt-close .panel:not(.on) .pp {
-  visibility: hidden;
-}
-::view-transition-group(poster) {
-  animation-duration: 0.4s;
-  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-::view-transition-image-pair(poster) {
-  isolation: auto;
-}
-::view-transition-old(poster),
-::view-transition-new(poster) {
-  height: 100%;
-  object-fit: cover;
-  mix-blend-mode: normal;
-  animation-duration: 0.4s;
-}
-/* Keep the sharp (large) poster on screen: opening, it takes over at once; closing, it stays until the end.
-   The small card thumbnail, stretched, would look soft. */
-:root.vt-open::view-transition-old(poster) {
-  animation: vt-out 0.12s ease both;
-}
-:root.vt-open::view-transition-new(poster) {
-  animation: none;
-}
-:root.vt-close::view-transition-old(poster) {
-  animation: none;
-}
-:root.vt-close::view-transition-new(poster) {
-  animation: vt-in-late 0.4s ease both;
-}
-@keyframes vt-out {
-  to {
-    opacity: 0;
-  }
-}
-@keyframes vt-in-late {
-  0%,
-  75% {
-    opacity: 0;
-  }
-}
-/* Phones and tablets: the panel is full-screen, so fading it would show two layers of text at once. Instead
-   the frosted sheet is there at once (the page behind is blurred), its text drifts in while the poster flies
-   to its spot, and on close the sheet goes at once while the poster flies back into its card. */
-@media (max-width: 1023px) {
-  html.vt-open .panel,
-  html.vt-open .panel.on {
-    transition: none;
-  }
-  html.vt-open .panel .pbar,
-  html.vt-open .panel .pfoot,
-  html.vt-open .panel .pscroll > :not(.pp) {
-    animation: vt-content-in 0.3s ease both;
-  }
-  html.vt-close .panel {
-    transition: none;
-  }
-}
-@keyframes vt-content-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
 }

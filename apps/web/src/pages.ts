@@ -109,14 +109,6 @@ ${ctx.analyticsToken ? `<script defer src="https://static.cloudflareinsights.com
 </html>`;
 }
 
-/** The people who built the site, credited at the bottom of every page. */
-const CREDITS = [
-  { name: "Abhineeth", url: "https://github.com/AbhineethVS" },
-  { name: "Asil", url: "https://www.linkedin.com/in/muhammed-asil-pari/" },
-  { name: "Abhijithu", url: "https://www.linkedin.com/in/abhijithu-k-r-b56021257/" },
-  { name: "Irfan", url: "https://www.linkedin.com/in/muhammedirfanfarooque/" },
-];
-
 function footer(ctx: PageCtx): string {
   return `<footer class="foot">
   <div>
@@ -129,7 +121,7 @@ function footer(ctx: PageCtx): string {
     <a href="/about">ABOUT</a>
     <button class="install-btn" data-install hidden>INSTALL APP</button>
   </nav>
-  <p class="credit"><span class="credit-t">Built with <span class="heart" aria-label="love">${icon("heart-fill")}</span> by ${CREDITS.map((c, i) => `${i === 0 ? "" : i === CREDITS.length - 1 ? " and " : ", "}<a href="${c.url}" target="_blank" rel="noopener">${c.name}</a>`).join("")}</span></p>
+  <p class="credit"><span class="credit-t">Built with <span class="heart" aria-label="love">${icon("heart-fill")}</span> by <a href="https://github.com/AbhineethVS" target="_blank" rel="noopener">Abhineeth V S</a></span></p>
 </footer>`;
 }
 

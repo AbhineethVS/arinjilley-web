@@ -324,62 +324,9 @@ function initHome() {
     if (history.state?.panel) history.back();
     else {
       history.replaceState({ view: state.view }, "", basePath);
-      closeWithMorph();
+      closePanelUi();
     }
   }
-  // ── Card → panel: the tapped poster grows into the panel's poster while the panel slides in, and shrinks back
-  // on close (View Transitions API; current Chrome and Safari). Elsewhere, or with reduced motion, the panel
-  // just slides as before. html.vt (+ vt-open/vt-close) tunes the panel and poster while the morph runs.
-  const THUMBS = ".card-thumb, .soon-thumb, .ti-thumb";
-  type ViewTransitionDoc = { startViewTransition?: (update: () => void) => { finished: Promise<void> } };
-  const canMorph = () =>
-    typeof (document as ViewTransitionDoc).startViewTransition === "function" &&
-    !matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const onScreen = (el: Element) => {
-    const r = el.getBoundingClientRect();
-    return r.width > 0 && r.bottom > 0 && r.top < innerHeight;
-  };
-  function morph(
-    dir: "open" | "close",
-    update: () => void,
-    from: HTMLElement | null,
-    findTo: () => HTMLElement | null,
-  ) {
-    if (!canMorph()) return update();
-    const root = document.documentElement;
-    let to: HTMLElement | null = null;
-    if (from) from.style.viewTransitionName = "poster";
-    root.classList.add("vt", `vt-${dir}`);
-    const vt = (document as ViewTransitionDoc).startViewTransition!(() => {
-      if (from) from.style.viewTransitionName = "";
-      update();
-      to = from ? findTo() : null;
-      if (to) to.style.viewTransitionName = "poster";
-    });
-    vt.finished.finally(() => {
-      root.classList.remove("vt", `vt-${dir}`);
-      if (to) to.style.viewTransitionName = "";
-    });
-  }
-  function openWithMorph(slug: string, from: HTMLElement | null) {
-    morph(
-      "open",
-      () => openPanel(slug),
-      from,
-      () => panel.querySelector<HTMLElement>(".pp"),
-    );
-  }
-  function closeWithMorph() {
-    if (!panel.classList.contains("on")) return;
-    const slug = current;
-    morph("close", closePanelUi, panel.querySelector<HTMLElement>(".pp"), () => {
-      const el = slug
-        ? listEl.querySelector<HTMLElement>(`a[data-slug="${CSS.escape(slug)}"] .card-thumb`)
-        : null;
-      return el && onScreen(el) ? el : null;
-    });
-  }
-
   function step(dir: number) {
     if (!current) return;
     const next = order[order.indexOf(current) + dir];
@@ -602,7 +549,7 @@ function initHome() {
       openPanel(m[1]!);
       return;
     }
-    closeWithMorph();
+    closePanelUi();
     const view = location.pathname === "/archive" ? "archive" : "upcoming";
     if (view !== state.view) setView(view, false);
     if (e.state === null) basePath = location.pathname;
@@ -641,8 +588,7 @@ function initHome() {
       e.preventDefault();
       basePath = state.view === "archive" ? "/archive" : "/";
       history.pushState({ panel: link.dataset.slug }, "", `/h/${link.dataset.slug}`);
-      const thumb = link.querySelector<HTMLElement>(THUMBS);
-      openWithMorph(link.dataset.slug!, thumb && onScreen(thumb) ? thumb : null);
+      openPanel(link.dataset.slug!);
     }
   });
 
