@@ -45,6 +45,8 @@ function clock() {
   const p = istParts(Date.now());
   const s = `${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
   if (s === lastClock) return;
+  const sr = $("clockSr");
+  if (sr) sr.textContent = `Time in India: ${s}`;
   if (!lastClock) {
     el.innerHTML = [...s].map((c) => `<span class="flap${c === ":" ? " colon" : ""}">${c}</span>`).join("");
   } else {
@@ -337,6 +339,238 @@ function initHome() {
     if (!next) return;
     history.replaceState({ panel: next }, "", `/h/${next}`);
     openPanel(next);
+  }
+
+  // ── Hero heading: typed in letter by letter on load (html.tw is set in <head> unless reduced motion) ──
+  // Every letter is laid out from the start (hidden until typed) and each word is unbreakable, so lines never
+  // reflow mid-typing. The caret is a pseudo-element on the current letter, so it can't add a break point either.
+  const heading = $("heroH");
+  if (heading && document.documentElement.classList.contains("tw")) {
+    heading.setAttribute("aria-label", heading.textContent ?? "");
+    const letters: HTMLElement[] = [];
+    const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+    const letter = (ch: string) => {
+      const el = document.createElement("span");
+      el.className = "tc";
+      el.textContent = ch;
+      letters.push(el);
+      return el;
+    };
+    for (const node of nodes) {
+      const frag = document.createDocumentFragment();
+      node.data.split(/( )/).forEach((part) => {
+        if (!part) return;
+        if (part === " ") {
+          frag.append(letter(" "));
+          return;
+        }
+        const word = document.createElement("span");
+        word.className = "tw-word";
+        for (const ch of part) word.appendChild(letter(ch));
+        frag.append(word);
+      });
+      node.replaceWith(frag);
+    }
+    for (const el of heading.querySelectorAll(".tw-word, .tc")) el.setAttribute("aria-hidden", "true");
+    let at = letters[0]!;
+    at.classList.add("cur", "pre");
+    heading.classList.add("typing", "busy");
+    let i = 0;
+    const type = () => {
+      const el = letters[i++];
+      if (!el) {
+        heading.classList.remove("busy");
+        heading.classList.add("typed");
+        return;
+      }
+      at.classList.remove("cur", "pre");
+      el.classList.add("on", "cur");
+      at = el;
+      const next = letters[i];
+      // A short beat at the line break, a little human jitter everywhere else.
+      const lineBreak = next && el.closest(".acc") !== next.closest(".acc");
+      window.setTimeout(type, lineBreak ? 340 : el.textContent === " " ? 90 : 50 + Math.random() * 55);
+    };
+    window.setTimeout(type, 450);
+  }
+
+  // ── Hero deck (mobile): rotates every few seconds; tap the front card for details, a side card to bring it forward ──
+  const fan = $("fan");
+  if (fan) {
+    const cards = [...fan.querySelectorAll<HTMLAnchorElement>(".fp")];
+    const dots = [...fan.querySelectorAll(".fan-dots i")];
+    const n = cards.length;
+    let front = 0;
+    let timer: number | undefined;
+    let resumeTimer: number | undefined;
+    let swiped = false;
+    let x0: number | null = null;
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pauseBtn = $<HTMLButtonElement>("fanPause");
+    const live = $("fanLive");
+    let userPaused = false;
+    const layout = () => {
+      cards.forEach((c, i) => {
+        const off = (i - front + n) % n;
+        const pos =
+          off === 0
+            ? "0"
+            : off === 1
+              ? "1"
+              : off === n - 1
+                ? "-1"
+                : n >= 5 && off === 2
+                  ? "2"
+                  : n >= 5 && off === n - 2
+                    ? "-2"
+                    : "x";
+        c.dataset.pos = pos;
+        c.tabIndex = pos === "0" ? 0 : -1;
+        // Only the front card is announced and reachable; the fanned ones are decoration until they come forward.
+        if (pos === "0") c.removeAttribute("aria-hidden");
+        else c.setAttribute("aria-hidden", "true");
+      });
+      dots.forEach((d, i) => {
+        d.classList.toggle("on", i === front);
+      });
+    };
+    // Manual turns are announced; the automatic ones stay quiet.
+    const turn = (dir: number, announce = false) => {
+      front = (front + dir + n) % n;
+      layout();
+      if (announce && live) live.textContent = cards[front]?.getAttribute("aria-label") ?? "";
+    };
+    const play = () => {
+      window.clearInterval(timer);
+      if (still || n < 2 || userPaused) return;
+      timer = window.setInterval(() => {
+        if (!document.hidden && !current && fan.offsetParent) turn(1);
+      }, 2000);
+    };
+    const hold = () => {
+      window.clearInterval(timer);
+      window.clearTimeout(resumeTimer);
+      resumeTimer = window.setTimeout(play, 6000);
+    };
+    // Runs before the document-level handler: side cards turn the deck; the front card falls through and opens the panel.
+    fan.addEventListener("click", (e) => {
+      const c = (e.target as HTMLElement).closest<HTMLAnchorElement>(".fp");
+      if (!c) return;
+      hold();
+      if (swiped || c.dataset.pos !== "0") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!swiped) turn(Number(c.dataset.pos) || 1, true);
+      }
+      swiped = false;
+    });
+    fan.addEventListener("pointerdown", (e) => {
+      x0 = e.clientX;
+      swiped = false;
+    });
+    fan.addEventListener("pointerup", (e) => {
+      if (x0 === null) return;
+      const dx = e.clientX - x0;
+      x0 = null;
+      if (Math.abs(dx) > 40) {
+        swiped = true;
+        hold();
+        turn(dx < 0 ? 1 : -1, true);
+      }
+    });
+    fan.addEventListener("pointercancel", () => {
+      x0 = null;
+    });
+    // Scrolling over the deck (wheel or trackpad) turns it one card per gesture instead of scrolling the page.
+    // A gesture ends after a short quiet gap, so trackpad momentum doesn't skip several cards.
+    let lastWheel = 0;
+    let lastTurn = 0;
+    fan.addEventListener(
+      "wheel",
+      (e) => {
+        const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        e.preventDefault();
+        const t = performance.now();
+        const fresh = t - lastWheel > 220;
+        lastWheel = t;
+        if (Math.abs(d) < 4 || (!fresh && t - lastTurn < 700)) return;
+        lastTurn = t;
+        hold();
+        turn(d > 0 ? 1 : -1, true);
+      },
+      { passive: false },
+    );
+    // Desktop: hold still under the mouse; arrow keys turn the deck when it has focus.
+    fan.addEventListener("mouseenter", () => {
+      window.clearInterval(timer);
+      window.clearTimeout(resumeTimer);
+    });
+    fan.addEventListener("mouseleave", hold);
+    fan.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      hold();
+      turn(e.key === "ArrowRight" ? 1 : -1, true);
+      cards[front]?.focus({ preventScroll: true });
+    });
+    // Pause button: stays paused until pressed again. Keyboard focus inside the deck also holds it still.
+    if (pauseBtn) {
+      if (still) pauseBtn.hidden = true;
+      pauseBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        userPaused = !userPaused;
+        pauseBtn.setAttribute("aria-pressed", String(userPaused));
+        pauseBtn.setAttribute("aria-label", userPaused ? "Play rotating cards" : "Pause rotating cards");
+        if (userPaused) {
+          window.clearInterval(timer);
+          window.clearTimeout(resumeTimer);
+        } else play();
+      });
+    }
+    fan.addEventListener("focusin", () => {
+      window.clearInterval(timer);
+      window.clearTimeout(resumeTimer);
+    });
+    fan.addEventListener("focusout", (e) => {
+      if (!fan.contains(e.relatedTarget as Node | null)) hold();
+    });
+    layout();
+    play();
+  }
+
+  // ── Corner folder: the three posters closing soonest. Closed, any click opens it; open, a poster opens its details. ──
+  const folder = $("folder");
+  const folderBtn = $("folderBtn");
+  if (folder && folderBtn) {
+    const fcards = [...folder.querySelectorAll<HTMLAnchorElement>(".fd-card")];
+    const setOpen = (open: boolean) => {
+      folder.classList.toggle("open", open);
+      folderBtn.setAttribute("aria-expanded", String(open));
+      folder.querySelector(".fd-stage")?.setAttribute("aria-hidden", String(!open));
+      for (const c of fcards) {
+        c.tabIndex = open ? 0 : -1;
+        c.setAttribute("aria-hidden", String(!open));
+      }
+    };
+    folder.addEventListener("click", (e) => {
+      const open = folder.classList.contains("open");
+      const poster = (e.target as HTMLElement).closest(".fd-card");
+      if (open && poster) return; // falls through to the document handler, which opens the panel
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(!open);
+    });
+    document.addEventListener("click", (e) => {
+      if (folder.classList.contains("open") && !folder.contains(e.target as Node)) setOpen(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && folder.classList.contains("open") && !current) {
+        setOpen(false);
+        folderBtn.focus();
+      }
+    });
   }
 
   $("pClose")?.addEventListener("click", closePanel);

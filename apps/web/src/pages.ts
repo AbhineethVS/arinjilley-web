@@ -27,7 +27,7 @@ export interface PageCtx {
 }
 
 // Picks one accent per visit (per tab session), never the same as the previous visit. Runs before first paint.
-const ACCENT_SCRIPT = `(()=>{const A=["#C8F560","#7CC4FF","#B4A7FF","#FF7AA2","#FF8E72","#EDE6D6"];let a;try{a=sessionStorage.getItem("arj-accent");if(!A.includes(a)){const p=a||localStorage.getItem("arj-last-accent"),c=A.filter(x=>x!==p);a=c[Math.floor(Math.random()*c.length)];sessionStorage.setItem("arj-accent",a);localStorage.setItem("arj-last-accent",a)}}catch(e){a=A[0]}document.documentElement.style.setProperty("--accent",a)})();`;
+const ACCENT_SCRIPT = `(()=>{const A=["#C8F560","#7CC4FF","#B4A7FF","#FF7AA2","#FF8E72","#EDE6D6"];let a;try{a=sessionStorage.getItem("arj-accent");if(!A.includes(a)){const p=a||localStorage.getItem("arj-last-accent"),c=A.filter(x=>x!==p);a=c[Math.floor(Math.random()*c.length)];sessionStorage.setItem("arj-accent",a);localStorage.setItem("arj-last-accent",a)}}catch(e){a=A[0]}document.documentElement.style.setProperty("--accent",a);if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("tw")})();`;
 
 /** JSON safe to put inside a <script> tag. */
 // (U+2028/U+2029 are valid in JSON but end a line in older JavaScript parsers, so they're escaped too.)
@@ -91,7 +91,7 @@ ${og ? `<meta property="og:image" content="${esc(og)}"><meta name="twitter:card"
     <a href="/" class="logo" aria-label="arinjilley? home">${LOGO_MARK}<span>arinjilley<span class="q">?</span></span></a>
     <nav class="nav" aria-label="Main">${nav("home", "/", "Hackathons")}${nav("archive", "/archive", "Archive")}${nav("about", "/about", "About")}</nav>
     <div class="top-right">
-      <div class="clock mono" aria-label="Current time in India"><span class="flaps" id="clock"></span><span class="tz">IST</span></div>
+      <div class="clock mono" role="timer" aria-live="off"><span class="sr" id="clockSr">Time in India</span><span class="flaps" id="clock" aria-hidden="true"></span><span class="tz" aria-hidden="true">IST</span></div>
       <a href="${esc(ctx.groupUrl)}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">${icon("whatsapp-logo")}<span class="lbl-long">Join the group</span><span class="sr">Join the WhatsApp group</span></a>
     </div>
   </div>
@@ -119,37 +119,73 @@ function footer(ctx: PageCtx): string {
 </footer>`;
 }
 
-function heroPosters(list: WebListing[], now: number): { floats: string; fan: string } {
-  const upcoming = list
+function heroPosters(list: WebListing[], now: number): string {
+  const deck = list
     .filter((h) => !h.deadline || deadlineInstant(h.deadline) > now)
     .sort(
       (a, b) =>
         (a.deadline ? deadlineInstant(a.deadline) : Infinity) -
         (b.deadline ? deadlineInstant(b.deadline) : Infinity),
     )
-    .slice(0, 4);
-  const spots = [
-    { st: "left:0;top:40px;width:150px;transform:rotate(-7deg)", outer: true },
-    { st: "right:0;top:28px;width:150px;transform:rotate(7deg)", outer: true },
-    { st: "left:7%;top:262px;width:138px;transform:rotate(5deg)", outer: false },
-    { st: "right:7%;top:250px;width:138px;transform:rotate(-5deg)", outer: false },
-  ];
-  const floats = upcoming
+    .slice(0, 6);
+  // Deck: front card, then one (mobile) or two (desktop) tucked behind on each side, the rest waiting. client/app.ts rotates data-pos.
+  const n = deck.length;
+  const fanPos = (i: number) =>
+    i === 0
+      ? "0"
+      : i === 1
+        ? "1"
+        : i === n - 1
+          ? "-1"
+          : n >= 5 && i === 2
+            ? "2"
+            : n >= 5 && i === n - 2
+              ? "-2"
+              : "x";
+  const fan = deck
     .map(
       (h, i) =>
-        `<a href="/h/${esc(h.slug)}" data-slug="${esc(h.slug)}" class="float${spots[i]!.outer ? " outer" : ""}" style="${spots[i]!.st}" tabindex="-1" aria-hidden="true">${art(h)}</a>`,
+        `<a href="/h/${esc(h.slug)}" data-slug="${esc(h.slug)}" class="fp" data-pos="${fanPos(i)}"${i ? ' tabindex="-1" aria-hidden="true"' : ""} aria-label="${esc(h.title)}, ${i + 1} of ${n}">${art(h)}</a>`,
     )
     .join("");
-  const fanSpots = [
-    "left:0;transform:rotate(-10deg) translateY(10px)",
-    "right:0;transform:rotate(10deg) translateY(10px)",
-    "left:88px;top:0;z-index:2",
-  ];
-  const fan = upcoming
-    .slice(0, 3)
-    .map((h, i) => `<div class="fp" style="${fanSpots[i]}">${art(h)}</div>`)
+  const dots = deck.length > 1 ? deck.map((_, i) => `<i${i ? "" : ' class="on"'}></i>`).join("") : "";
+  // Auto-rotation must be stoppable (WCAG 2.2.2), so the pager row carries a pause button.
+  const pager = dots
+    ? `<div class="fan-dots"><button type="button" class="fan-pause" id="fanPause" aria-pressed="false" aria-label="Pause rotating cards"></button><span class="fan-pips" aria-hidden="true">${dots}</span></div><p class="sr" id="fanLive" aria-live="polite"></p>`
+    : "";
+  return fan && `${fan}${pager}`;
+}
+
+// Folder in the corner holding the three posters whose registration closes soonest (folder from Uiverse.io by junaid_3671).
+const FOLDER_PATH =
+  "M0 25C0 11.1929 11.1929 0 25 0H136.084C143.044 0 149.689 2.90139 154.42 8.00608L178.08 33.5343C182.811 38.639 189.456 41.5404 196.416 41.5404H296C309.807 41.5404 321 52.7333 321 66.5404V216C321 229.807 309.807 241 296 241H25C11.1929 241 0 229.807 0 216V25Z";
+function closingFolder(list: WebListing[], now: number): string {
+  // Only hackathons with a real deadline still ahead; rolling ones have nothing to count down to.
+  const closing = list
+    .filter((h) => h.deadline && deadlineInstant(h.deadline) > now)
+    .sort((a, b) => deadlineInstant(a.deadline!) - deadlineInstant(b.deadline!))
+    .slice(0, 3);
+  if (!closing.length) return "";
+  // DOM order is paint order, so the one closing first goes last and sits on top.
+  const cards = closing
+    .map(
+      (h, i) =>
+        `<a class="fd-card fd-card-${i + 1}" href="/h/${esc(h.slug)}" data-slug="${esc(h.slug)}" tabindex="-1" aria-hidden="true" aria-label="${esc(h.title)}">${art(h)}</a>`,
+    )
+    .reverse()
     .join("");
-  return { floats, fan };
+  return `<div class="fd" id="folder">
+  <button type="button" class="fd-toggle" id="folderBtn" aria-expanded="false" aria-controls="folder">Deadline approaching: ${closing.length} ${closing.length === 1 ? "hackathon closes" : "hackathons close"} soonest</button>
+  <div class="fd-stage" aria-hidden="true">
+    <div class="fd-back"></div>
+    <div class="fd-cards">${cards}</div>
+    <div class="fd-flap">
+      <div class="fd-flap-blur" style="clip-path:path('${FOLDER_PATH}');-webkit-clip-path:path('${FOLDER_PATH}')"></div>
+      <svg viewBox="0 0 321 241" width="321" height="241"><path d="${FOLDER_PATH}" fill="var(--fd-flap-fill)" fill-opacity="var(--fd-flap-opacity)" stroke="var(--fd-flap-stroke)"/></svg>
+      <span class="fd-label mono"><i class="fd-dot"></i>DEADLINE APPROACHING</span>
+    </div>
+  </div>
+</div>`;
 }
 
 export function homePage(
@@ -161,13 +197,12 @@ export function homePage(
   const groups = boardGroups(list, now, view);
   const upcomingCount = upcomingGroups(list, now).reduce((n, g) => n + g.items.length, 0);
   const archiveCount = archiveGroups(list, now).reduce((n, g) => n + g.items.length, 0);
-  const { floats, fan } = heroPosters(list, now);
-  const body = `<main>
+  const fan = heroPosters(list, now);
+  const body = `<a class="skip" href="#board">Skip to hackathons</a>
+<main>
   <section class="hero wrap" id="hero">
-    <div id="floats">${floats}</div>
     <div class="hero-text">
-      ${fan ? `<div class="hero-fan" aria-hidden="true">${fan}</div>` : ""}
-      <h1 class="display">Hackathons worth<br><span class="acc">applying to.</span></h1>
+      <h1 class="display" id="heroH">Hackathons worth<br><span class="acc">applying to.</span></h1>
       <p>We find hackathons, check the details, and line them up by deadline, so you apply before registration closes.</p>
       <div class="hero-cta">
         <a href="${esc(ctx.groupUrl)}" class="btn btn-primary" target="_blank" rel="noopener">${icon("whatsapp-logo")}Join the WhatsApp group</a>
@@ -175,6 +210,7 @@ export function homePage(
       </div>
       <div class="hero-stats mono" id="stats">${statsHtml(list, now)}</div>
     </div>
+    ${fan ? `<div class="hero-fan" id="fan" role="region" aria-roledescription="carousel" aria-label="Closing soon">${fan}</div>` : ""}
   </section>
   <div class="wrap">
     <section class="soon" id="soon" aria-labelledby="soon-h">${soonHtml(list, now)}</section>
@@ -198,6 +234,7 @@ export function homePage(
     ${footer(ctx)}
   </div>
 </main>
+${closingFolder(list, now)}
 <div class="scrim" id="scrim"></div>
 <aside class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Hackathon details">
   <div class="pbar">

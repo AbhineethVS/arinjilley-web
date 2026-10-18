@@ -84,10 +84,12 @@ export function card(h: WebListing, now: number): string {
   ].join("");
   return `<a class="card${st === "archived" ? " archived" : ""}" href="/h/${esc(h.slug)}" data-slug="${esc(h.slug)}">
   <div class="card-body">
-    <div class="card-top"><span class="pill ${PILL[st]}">${STATUS_LABEL[st]}</span>${time}</div>
-    <h3 class="card-title">${esc(h.title)}</h3>
-    ${h.organiser ? `<div class="meta">${icon("buildings")}<span>${esc(h.organiser)}</span></div>` : ""}
-    <div class="meta">${where}</div>
+    <div class="card-main">
+      <div class="card-top"><span class="pill ${PILL[st]}">${STATUS_LABEL[st]}</span>${time}</div>
+      <h3 class="card-title">${esc(h.title)}</h3>
+      ${h.organiser ? `<div class="meta">${icon("buildings")}<span>${esc(h.organiser)}</span></div>` : ""}
+      <div class="meta">${where}</div>
+    </div>
     ${facts ? `<div class="facts">${facts}</div>` : ""}
   </div>
   <div class="card-thumb">${art(h)}</div>
@@ -123,7 +125,8 @@ export function upcomingGroups(list: WebListing[], now: number): Group[] {
     const k = istDayKey(at);
     if (!groups.has(k)) {
       groups.set(k, {
-        kicker: "Registration closes",
+        // Captioned once at the top; every group below is read the same way.
+        kicker: groups.size === 0 ? "Registration closes" : undefined,
         label: k === todayK ? "Today" : dayMonth(at),
         sub: k === tomorrowK ? "Tomorrow" : WEEKDAYS[istParts(at).weekday]!,
         today: k === todayK,
@@ -254,7 +257,8 @@ export function soonHtml(list: WebListing[], now: number): string {
     .map((h) => {
       const closes = deadlineInstant(h.deadline!);
       const last = boardStatus(h, now) === "last";
-      return `<a class="soon-tile" href="/h/${esc(h.slug)}" data-slug="${esc(h.slug)}"><div class="soon-thumb">${art(h)}</div><div class="soon-txt"><div class="soon-title">${esc(h.title)}</div><div class="soon-cd mono${last ? " last" : ""}" data-cd="${closes}" data-fmt="in">Closes in ${countdown(closes - now)}</div></div></a>`;
+      const sub = [h.organiser, h.mode === "online" ? "Online" : h.city].filter(Boolean).join(" · ");
+      return `<a class="soon-tile" href="/h/${esc(h.slug)}" data-slug="${esc(h.slug)}"><div class="soon-in"><div class="soon-thumb">${art(h)}</div><div class="soon-title">${esc(h.title)}</div>${sub ? `<div class="soon-sub">${esc(sub)}</div>` : ""}<div class="soon-cd mono${last ? " last" : ""}" data-cd="${closes}" data-fmt="in">Closes in ${countdown(closes - now)}</div><span class="soon-go">${icon("arrow-up-right")}</span></div></a>`;
     })
     .join("")}</div>`;
 }
