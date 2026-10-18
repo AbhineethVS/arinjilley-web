@@ -2751,3 +2751,71 @@ html.lock .fd-pill {
 .foot .logo .logo-mark {
   height: 1.15em;
 }
+
+/* ───────────── Card → panel morph (View Transitions; see client/app.ts) ───────────── */
+/* While it runs, the panel's own slide/fade is off: the transition animates it instead. */
+html.vt .panel,
+html.vt .scrim {
+  transition: none;
+}
+html.vt .panel {
+  view-transition-name: panel;
+}
+/* The flying poster has to stay above the panel (which otherwise frosts over it). */
+::view-transition-group(panel) {
+  z-index: 1;
+}
+::view-transition-group(poster) {
+  z-index: 2;
+  animation-duration: 0.42s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-old(poster),
+::view-transition-new(poster) {
+  animation-duration: 0.42s;
+  height: 100%;
+  object-fit: cover;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.25s;
+}
+::view-transition-new(panel) {
+  animation: vt-panel-in 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+::view-transition-old(panel) {
+  animation: vt-panel-out 0.24s ease-in both;
+}
+@keyframes vt-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+@keyframes vt-panel-out {
+  to {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+/* Phones and tablets: the panel is full-screen, so it rises from below instead. */
+@media (max-width: 1023px) {
+  ::view-transition-new(panel) {
+    animation-name: vt-sheet-in;
+  }
+  ::view-transition-old(panel) {
+    animation-name: vt-sheet-out;
+  }
+}
+@keyframes vt-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes vt-sheet-out {
+  to {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}

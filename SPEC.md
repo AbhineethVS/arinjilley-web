@@ -155,6 +155,8 @@ Lines with no data are left out. Rolling listings show "⏳ *Registration:* open
 
 - **Footer** (every page): club blurb, links, and at the very bottom, centred: "—— Built with ♥ by Abhineeth V S ——" (heart in the accent colour; the name links to github.com/AbhineethVS).
 
+- **Analytics**: Cloudflare Web Analytics (free, no cookies, no consent banner) on public pages only, never /admin. Enabled by putting the site token in `CF_ANALYTICS_TOKEN` (apps/web/wrangler.jsonc); empty = off.
+
 ### 8.3 Status rules (IST)
 | Status | When |
 |---|---|
@@ -166,6 +168,8 @@ Lines with no data are left out. Rolling listings show "⏳ *Registration:* open
 Sorted by deadline (soonest first), ties broken by event start.
 
 ### 8.4 Hackathon detail
+Opening a hackathon from a card morphs its poster into the panel's poster while the panel slides in (View Transitions API; plain slide where unsupported or with reduced motion), and back on close.
+**Share** (panel top bar and the hackathon page): on phones the native share sheet with the poster attached and a short emoji message + link; on laptops it copies the message and link.
 The side panel is frosted glass (the board shows through, blurred) over a light scrim; on phones it's more opaque for reading.
 Poster → title → "by Organiser" → icon tiles: **Deadline · Dates · Location/Online · Team · Prize · Fee · Who can join** → countdown pill _"Registration closes in **2d 5h**"_ → summary, how it works, themes.
 Actions: **Register ↗** (sticky at the bottom on mobile) · **Add deadline to Google Calendar** · Add event dates · Copy link / Share.

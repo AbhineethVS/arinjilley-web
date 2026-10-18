@@ -8,6 +8,7 @@ import {
   dateRange,
   dayMonth,
   deadlineInstant,
+  fullDate,
   hostOf,
   istDayKey,
   istParts,
@@ -426,7 +427,27 @@ function rangeSub(h: WebListing): string {
   return "Event dates";
 }
 
-export function detailHtml(h: WebListing, now: number): string {
+/** The message a Share sends: short, in the club's emoji style; the link is added by the share code. */
+export function shareText(h: WebListing): string {
+  const where =
+    h.mode === "online" ? "💻 Online" : `📍 ${[h.city, MODE_LABEL[h.mode]].filter(Boolean).join(" · ")}`;
+  return [
+    `🚀 ${h.title}`,
+    h.deadline ? `⏰ Registration closes ${fullDate(h.deadline)}` : "",
+    [h.start ? `📅 ${dateRange(h.start, h.end)}` : "", where].filter(Boolean).join("   "),
+    h.prizeShort ? `🏆 ${h.prizeShort}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/** Attributes for a Share button (client/share.ts does the sharing). */
+export function shareAttrs(h: WebListing, url: string): string {
+  return `data-share data-share-title="${esc(h.title)}" data-share-text="${esc(shareText(h))}" data-share-url="${esc(url)}" data-share-img="${esc(h.posterUrl ?? "")}"`;
+}
+
+/** `shareUrl`: show a Share button (the full page; the side panel has one in its top bar). */
+export function detailHtml(h: WebListing, now: number, opts: { shareUrl?: string } = {}): string {
   const st = boardStatus(h, now);
   const closes = h.deadline ? deadlineInstant(h.deadline) : null;
   const host = hostOf(h.registerUrl);
@@ -496,6 +517,7 @@ ${h.organiser ? `<div class="d-by"><span class="av">${icon("buildings")}</span>b
   <div class="cta-actions">
     ${h.registerUrl ? `<a class="btn btn-primary" href="${esc(h.registerUrl)}" target="_blank" rel="noopener">Register on ${esc(host)}${icon("arrow-up-right")}</a>` : ""}
     <button type="button" class="btn btn-ghost btn-sm" data-save="${esc(h.slug)}" aria-pressed="false">${icon("bookmark-simple")}<span class="save-l">Save</span></button>
+    ${opts.shareUrl ? `<button type="button" class="btn btn-ghost btn-sm" ${shareAttrs(h, opts.shareUrl)}>${icon("share-network")}Share</button>` : ""}
 ${link(dl, "alarm", "Add deadline")}
     ${link(ev, "calendar-plus", "Add event dates")}
   </div>

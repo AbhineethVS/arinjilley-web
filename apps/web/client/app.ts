@@ -1,4 +1,4 @@
-// Browser script. On every page: live countdowns, saving hackathons, header border on scroll, copy-link.
+// Browser script. On every page: live countdowns, saving and sharing hackathons, header border on scroll, copy-link.
 // On the home page: filter bar and sort, search, Upcoming/Archive tabs and the side panel, re-rendering with the
 // same functions the server used (shared/render.ts), so what you see never differs from the first load.
 
@@ -18,12 +18,14 @@ import {
   isFiltered,
   SORTS,
   type SortKey,
+  shareText,
   soonHtml,
   statsHtml,
   timelineHtml,
 } from "../shared/render";
 import { setupPwa } from "./pwa";
 import { setupFolder, setupSaving, syncSaveButtons } from "./saved";
+import { prefetchShare, setupShare } from "./share";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T | null;
 
@@ -52,15 +54,6 @@ function tickCountdowns() {
   }
 }
 
-async function copyLink(url = location.href) {
-  try {
-    await navigator.clipboard.writeText(url);
-    toast("Link copied");
-  } catch {
-    toast("Couldn't copy the link");
-  }
-}
-
 // The top bar's accent tint fades out over the first ~260px of scrolling, back to the plain page colour.
 const TINT_PCT = 12;
 const TINT_FADE_PX = 260;
@@ -86,6 +79,7 @@ window.setInterval(() => {
 }, 1000);
 setupPwa(toast);
 setupSaving(toast);
+setupShare(toast);
 
 // ── Home page ──
 
@@ -287,6 +281,12 @@ function initHome() {
     pBody.scrollTop = 0;
     $("pSave")!.dataset.save = slug;
     syncSaveButtons(panel);
+    const share = $("pShare")!;
+    share.dataset.shareTitle = h.title;
+    share.dataset.shareText = shareText(h);
+    share.dataset.shareUrl = `${location.origin}/h/${slug}`;
+    share.dataset.shareImg = h.posterUrl ?? "";
+    prefetchShare(share);
     const reg = $<HTMLAnchorElement>("pReg")!;
     const regM = $<HTMLAnchorElement>("pRegM")!;
     if (h.registerUrl) {
@@ -324,9 +324,56 @@ function initHome() {
     if (history.state?.panel) history.back();
     else {
       history.replaceState({ view: state.view }, "", basePath);
-      closePanelUi();
+      closeWithMorph();
     }
   }
+  // ── Card → panel: the tapped poster grows into the panel's poster while the panel slides in, and shrinks back
+  // on close (View Transitions API; current Chrome and Safari). Elsewhere, or with reduced motion, the panel
+  // just slides as before. html.vt switches off the panel's own CSS transition while the morph runs.
+  const THUMBS = ".card-thumb, .soon-thumb, .ti-thumb";
+  type ViewTransitionDoc = { startViewTransition?: (update: () => void) => { finished: Promise<void> } };
+  const canMorph = () =>
+    typeof (document as ViewTransitionDoc).startViewTransition === "function" &&
+    !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const onScreen = (el: Element) => {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.bottom > 0 && r.top < innerHeight;
+  };
+  function morph(update: () => void, from: HTMLElement | null, findTo: () => HTMLElement | null) {
+    if (!canMorph()) return update();
+    const root = document.documentElement;
+    let to: HTMLElement | null = null;
+    if (from) from.style.viewTransitionName = "poster";
+    root.classList.add("vt");
+    const vt = (document as ViewTransitionDoc).startViewTransition!(() => {
+      if (from) from.style.viewTransitionName = "";
+      update();
+      to = from ? findTo() : null;
+      if (to) to.style.viewTransitionName = "poster";
+    });
+    vt.finished.finally(() => {
+      root.classList.remove("vt");
+      if (to) to.style.viewTransitionName = "";
+    });
+  }
+  function openWithMorph(slug: string, from: HTMLElement | null) {
+    morph(
+      () => openPanel(slug),
+      from,
+      () => panel.querySelector<HTMLElement>(".pp"),
+    );
+  }
+  function closeWithMorph() {
+    if (!panel.classList.contains("on")) return;
+    const slug = current;
+    morph(closePanelUi, panel.querySelector<HTMLElement>(".pp"), () => {
+      const el = slug
+        ? listEl.querySelector<HTMLElement>(`a[data-slug="${CSS.escape(slug)}"] .card-thumb`)
+        : null;
+      return el && onScreen(el) ? el : null;
+    });
+  }
+
   function step(dir: number) {
     if (!current) return;
     const next = order[order.indexOf(current) + dir];
@@ -542,7 +589,6 @@ function initHome() {
   scrim.addEventListener("click", closePanel);
   $("pPrev")?.addEventListener("click", () => step(-1));
   $("pNext")?.addEventListener("click", () => step(1));
-  $("pCopy")?.addEventListener("click", () => copyLink());
 
   window.addEventListener("popstate", (e) => {
     const m = /^\/h\/([a-z0-9-]+)$/.exec(location.pathname);
@@ -550,7 +596,7 @@ function initHome() {
       openPanel(m[1]!);
       return;
     }
-    closePanelUi();
+    closeWithMorph();
     const view = location.pathname === "/archive" ? "archive" : "upcoming";
     if (view !== state.view) setView(view, false);
     if (e.state === null) basePath = location.pathname;
@@ -589,7 +635,8 @@ function initHome() {
       e.preventDefault();
       basePath = state.view === "archive" ? "/archive" : "/";
       history.pushState({ panel: link.dataset.slug }, "", `/h/${link.dataset.slug}`);
-      openPanel(link.dataset.slug!);
+      const thumb = link.querySelector<HTMLElement>(THUMBS);
+      openWithMorph(link.dataset.slug!, thumb && onScreen(thumb) ? thumb : null);
     }
   });
 
@@ -622,8 +669,3 @@ function initHome() {
     if (!current) renderAll();
   }, 60_000);
 }
-
-// ── Detail page: copy link button (if present) ──
-document.addEventListener("click", (e) => {
-  if ((e.target as HTMLElement).closest("#pageCopy")) copyLink();
-});

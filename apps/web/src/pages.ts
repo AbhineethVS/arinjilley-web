@@ -25,6 +25,8 @@ import {
 export interface PageCtx {
   siteUrl: string;
   groupUrl: string;
+  /** Cloudflare Web Analytics site token (public; empty = no analytics). */
+  analyticsToken?: string;
 }
 
 // Picks the accent before first paint: a new one for each new tab and on every reload (never the same as the
@@ -102,6 +104,7 @@ ${o.body}
 <div class="toast" id="toast" role="status"></div>
 ${o.data !== undefined ? `<script type="application/json" id="data">${safeJson(o.data)}</script>` : ""}
 <script src="/app.js?v=${__BUILD_ID__}" defer></script>
+${ctx.analyticsToken ? `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${esc(ctx.analyticsToken)}"}'></script>` : ""}
 </body>
 </html>`;
 }
@@ -223,7 +226,7 @@ ${folderShell()}
   <div class="pbar">
     <button class="icon-btn x-d" id="pClose" aria-label="Close">${icon("caret-double-right")}</button>
     <button type="button" class="btn btn-ghost btn-sm" id="pSave" data-save="" aria-pressed="false">${icon("bookmark-simple")}<span class="save-l">Save</span></button>
-    <button class="btn btn-ghost btn-sm" id="pCopy">${icon("copy")}Copy link</button>
+    <button type="button" class="btn btn-ghost btn-sm" id="pShare" data-share>${icon("share-network")}Share</button>
     <a class="btn btn-ghost btn-sm reg-d" id="pReg" target="_blank" rel="noopener">Register${icon("arrow-up-right")}</a>
     <span class="sp"></span>
     <button class="icon-btn" id="pPrev" aria-label="Previous hackathon">${icon("caret-up")}</button>
@@ -251,7 +254,7 @@ export function detailPage(ctx: PageCtx, h: WebListing, now: number): string {
   const host = h.registerUrl ? new URL(h.registerUrl).host.replace(/^www\./, "") : null;
   const body = `<main class="page-detail">
   <a href="/" class="back">${icon("arrow-left")}All hackathons</a>
-  ${detailHtml(h, now)}
+  ${detailHtml(h, now, { shareUrl: `${ctx.siteUrl}/h/${h.slug}` })}
 </main>
 ${h.registerUrl ? `<div class="page-cta"><a class="btn btn-primary" href="${esc(h.registerUrl)}" target="_blank" rel="noopener">Register on ${esc(host)}${icon("arrow-up-right")}</a></div>` : ""}
 <div class="wrap">${footer(ctx)}</div>`;

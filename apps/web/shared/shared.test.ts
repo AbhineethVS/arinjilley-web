@@ -12,6 +12,7 @@ import {
   type FilterState,
   filterBarHtml,
   filterDefs,
+  shareText,
   upcomingGroups,
 } from "./render";
 
@@ -195,5 +196,24 @@ describe("sorting", () => {
     expect(ar).not.toContain('data-f="sort"');
     expect(ar).toContain("1 hackathon<");
     expect(ar).toContain('id="reset"');
+  });
+});
+
+describe("sharing", () => {
+  it("builds a short message in the club's style", () => {
+    const h = listing({
+      slug: "colossus",
+      title: "COLOSSUS 3.0",
+      mode: "hybrid",
+      city: "Bengaluru",
+      deadline: parseIst("2026-10-25T23:59"),
+      start: parseIst("2026-11-13"),
+      end: parseIst("2026-11-14"),
+      prizeShort: "₹1L+",
+    });
+    expect(shareText(h)).toBe(
+      "🚀 COLOSSUS 3.0\n⏰ Registration closes Sun, 25 Oct, 11:59 PM\n📅 13–14 Nov   📍 Bengaluru · Hybrid\n🏆 ₹1L+",
+    );
+    expect(shareText(listing({ slug: "x", title: "X", mode: "online" }))).toBe("🚀 X\n💻 Online");
   });
 });

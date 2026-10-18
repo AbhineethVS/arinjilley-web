@@ -41,7 +41,11 @@ export default {
           { status: 500 },
         );
       }
-      const pageCtx: PageCtx = { siteUrl: env.SITE_URL.replace(/\/+$/, ""), groupUrl: env.GROUP_URL };
+      const pageCtx: PageCtx = {
+        siteUrl: env.SITE_URL.replace(/\/+$/, ""),
+        groupUrl: env.GROUP_URL,
+        analyticsToken: env.CF_ANALYTICS_TOKEN,
+      };
       return html(errorPage(pageCtx, path), 500);
     }
   },
@@ -50,7 +54,11 @@ export default {
 async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "") || "/";
-  const ctx: PageCtx = { siteUrl: env.SITE_URL.replace(/\/+$/, ""), groupUrl: env.GROUP_URL };
+  const ctx: PageCtx = {
+    siteUrl: env.SITE_URL.replace(/\/+$/, ""),
+    groupUrl: env.GROUP_URL,
+    analyticsToken: env.CF_ANALYTICS_TOKEN,
+  };
   const now = Date.now();
 
   if (path === "/admin" || path.startsWith("/admin/")) return handleAdmin(request, env, path);
