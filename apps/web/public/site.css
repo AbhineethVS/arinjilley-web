@@ -226,13 +226,14 @@ button {
 
 /* ───────────── Top bar ───────────── */
 .top {
-  /* This visit's accent, heavily muted into the page colour. */
-  --top-bg: color-mix(in srgb, var(--accent) 12%, var(--bg));
+  /* This visit's accent, heavily muted into the page colour. On the site, --top-mix fades from 12% to 0% as
+     you scroll down (client/app.ts), so the bar settles back to the plain page colour. */
+  --top-mix: 12%;
+  --top-bg: color-mix(in srgb, var(--accent) var(--top-mix), var(--bg));
   position: sticky;
   top: 0;
   z-index: 30;
   background: var(--top-bg);
-  transition: background-color 0.25s;
 }
 /* Instead of a border, the tint fades into the page below the bar. */
 .top::after {
@@ -247,7 +248,7 @@ button {
 }
 /* Once scrolled, the same tint goes slightly see-through and frosts over the content. */
 .top.scrolled {
-  --top-bg: color-mix(in srgb, color-mix(in srgb, var(--accent) 12%, var(--bg)) 86%, transparent);
+  --top-bg: color-mix(in srgb, color-mix(in srgb, var(--accent) var(--top-mix), var(--bg)) 86%, transparent);
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
   backdrop-filter: blur(14px) saturate(1.4);
 }

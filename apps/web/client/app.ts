@@ -86,9 +86,26 @@ async function copyLink(url = location.href) {
   }
 }
 
-window.addEventListener("scroll", () => $("top")?.classList.toggle("scrolled", scrollY > 8), {
-  passive: true,
-});
+// The top bar's accent tint fades out over the first ~260px of scrolling, back to the plain page colour.
+const TINT_PCT = 12;
+const TINT_FADE_PX = 260;
+let topFrame = 0;
+function updateTop() {
+  topFrame = 0;
+  const top = $("top");
+  if (!top) return;
+  top.classList.toggle("scrolled", scrollY > 8);
+  const t = Math.max(0, 1 - scrollY / TINT_FADE_PX);
+  top.style.setProperty("--top-mix", `${(TINT_PCT * t).toFixed(2)}%`);
+}
+window.addEventListener(
+  "scroll",
+  () => {
+    if (!topFrame) topFrame = requestAnimationFrame(updateTop);
+  },
+  { passive: true },
+);
+updateTop();
 clock();
 window.setInterval(() => {
   clock();
