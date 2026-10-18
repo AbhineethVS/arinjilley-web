@@ -329,7 +329,7 @@ function initHome() {
   }
   // ── Card → panel: the tapped poster grows into the panel's poster while the panel slides in, and shrinks back
   // on close (View Transitions API; current Chrome and Safari). Elsewhere, or with reduced motion, the panel
-  // just slides as before. html.vt switches off the panel's own CSS transition while the morph runs.
+  // just slides as before. html.vt (+ vt-open/vt-close) tunes the panel and poster while the morph runs.
   const THUMBS = ".card-thumb, .soon-thumb, .ti-thumb";
   type ViewTransitionDoc = { startViewTransition?: (update: () => void) => { finished: Promise<void> } };
   const canMorph = () =>
@@ -339,12 +339,17 @@ function initHome() {
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.bottom > 0 && r.top < innerHeight;
   };
-  function morph(update: () => void, from: HTMLElement | null, findTo: () => HTMLElement | null) {
+  function morph(
+    dir: "open" | "close",
+    update: () => void,
+    from: HTMLElement | null,
+    findTo: () => HTMLElement | null,
+  ) {
     if (!canMorph()) return update();
     const root = document.documentElement;
     let to: HTMLElement | null = null;
     if (from) from.style.viewTransitionName = "poster";
-    root.classList.add("vt");
+    root.classList.add("vt", `vt-${dir}`);
     const vt = (document as ViewTransitionDoc).startViewTransition!(() => {
       if (from) from.style.viewTransitionName = "";
       update();
@@ -352,12 +357,13 @@ function initHome() {
       if (to) to.style.viewTransitionName = "poster";
     });
     vt.finished.finally(() => {
-      root.classList.remove("vt");
+      root.classList.remove("vt", `vt-${dir}`);
       if (to) to.style.viewTransitionName = "";
     });
   }
   function openWithMorph(slug: string, from: HTMLElement | null) {
     morph(
+      "open",
       () => openPanel(slug),
       from,
       () => panel.querySelector<HTMLElement>(".pp"),
@@ -366,7 +372,7 @@ function initHome() {
   function closeWithMorph() {
     if (!panel.classList.contains("on")) return;
     const slug = current;
-    morph(closePanelUi, panel.querySelector<HTMLElement>(".pp"), () => {
+    morph("close", closePanelUi, panel.querySelector<HTMLElement>(".pp"), () => {
       const el = slug
         ? listEl.querySelector<HTMLElement>(`a[data-slug="${CSS.escape(slug)}"] .card-thumb`)
         : null;
