@@ -1,8 +1,8 @@
-// Browser script. On every page: the flip clock, live countdowns, header border on scroll, copy-link.
+// Browser script. On every page: live countdowns, saving hackathons, header border on scroll, copy-link.
 // On the home page: filter bar and sort, search, Upcoming/Archive tabs and the side panel, re-rendering with the
 // same functions the server used (shared/render.ts), so what you see never differs from the first load.
 
-import { boardStatus, countdown, istParts } from "@arinjilley/core";
+import { boardStatus, countdown } from "@arinjilley/core";
 import type { WebListing } from "../shared/listing";
 import {
   applyFilters,
@@ -23,6 +23,7 @@ import {
   timelineHtml,
 } from "../shared/render";
 import { setupPwa } from "./pwa";
+import { setupFolder, setupSaving, syncSaveButtons } from "./saved";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T | null;
 
@@ -36,32 +37,6 @@ function toast(message: string) {
   t.classList.add("on");
   clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => t.classList.remove("on"), 1800);
-}
-
-let lastClock = "";
-function clock() {
-  const el = $("clock");
-  if (!el) return;
-  const p = istParts(Date.now());
-  const s = `${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
-  if (s === lastClock) return;
-  const sr = $("clockSr");
-  if (sr) sr.textContent = `Time in India: ${s}`;
-  if (!lastClock) {
-    el.innerHTML = [...s].map((c) => `<span class="flap${c === ":" ? " colon" : ""}">${c}</span>`).join("");
-  } else {
-    [...s].forEach((c, i) => {
-      const f = el.children[i] as HTMLElement | undefined;
-      if (!f || f.textContent === c) return;
-      f.classList.remove("flip");
-      void f.offsetWidth;
-      f.classList.add("flip");
-      window.setTimeout(() => {
-        f.textContent = c;
-      }, 170);
-    });
-  }
-  lastClock = s;
 }
 
 function tickCountdowns() {
@@ -106,12 +81,11 @@ window.addEventListener(
   { passive: true },
 );
 updateTop();
-clock();
 window.setInterval(() => {
-  clock();
   tickCountdowns();
 }, 1000);
 setupPwa(toast);
+setupSaving(toast);
 
 // ── Home page ──
 
@@ -147,6 +121,7 @@ function initHome() {
     order = groups.flatMap((g) => g.items.map((h) => h.slug));
     listEl.innerHTML = timelineHtml(groups, now, emptyHtml(!!state.q || isFiltered(state), state.view));
     fbar.innerHTML = filterBarHtml(state, defs, state.view, order.length);
+    syncSaveButtons(listEl);
   }
   function renderAll() {
     const now = Date.now();
@@ -310,6 +285,8 @@ function initHome() {
     current = slug;
     pBody.innerHTML = detailHtml(h, Date.now());
     pBody.scrollTop = 0;
+    $("pSave")!.dataset.save = slug;
+    syncSaveButtons(panel);
     const reg = $<HTMLAnchorElement>("pReg")!;
     const regM = $<HTMLAnchorElement>("pRegM")!;
     if (h.registerUrl) {
@@ -557,38 +534,8 @@ function initHome() {
     play();
   }
 
-  // ── Corner folder: the three posters closing soonest. Closed, any click opens it; open, a poster opens its details. ──
-  const folder = $("folder");
-  const folderBtn = $("folderBtn");
-  if (folder && folderBtn) {
-    const fcards = [...folder.querySelectorAll<HTMLAnchorElement>(".fd-card")];
-    const setOpen = (open: boolean) => {
-      folder.classList.toggle("open", open);
-      folderBtn.setAttribute("aria-expanded", String(open));
-      folder.querySelector(".fd-stage")?.setAttribute("aria-hidden", String(!open));
-      for (const c of fcards) {
-        c.tabIndex = open ? 0 : -1;
-        c.setAttribute("aria-hidden", String(!open));
-      }
-    };
-    folder.addEventListener("click", (e) => {
-      const open = folder.classList.contains("open");
-      const poster = (e.target as HTMLElement).closest(".fd-card");
-      if (open && poster) return; // falls through to the document handler, which opens the panel
-      e.preventDefault();
-      e.stopPropagation();
-      setOpen(!open);
-    });
-    document.addEventListener("click", (e) => {
-      if (folder.classList.contains("open") && !folder.contains(e.target as Node)) setOpen(false);
-    });
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && folder.classList.contains("open") && !current) {
-        setOpen(false);
-        folderBtn.focus();
-      }
-    });
-  }
+  // ── Your folder (saved hackathons), in the corner ──
+  setupFolder(listings, tickCountdowns);
 
   $("pClose")?.addEventListener("click", closePanel);
   $("pClose2")?.addEventListener("click", closePanel);

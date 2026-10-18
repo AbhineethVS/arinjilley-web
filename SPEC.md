@@ -138,7 +138,7 @@ Lines with no data are left out. Rolling listings show "⏳ *Registration:* open
 | Admin | `/admin` | Private. See §8.5 |
 
 ### 8.2 Home
-- **Top bar**: logo · live IST clock · **Join the group** button.
+- **Top bar**: logo · nav · **Get the app** ("Install" on phones; opens the browser's install dialog, or the Safari steps on iPhone; hidden where installing isn't possible or it's already installed) · **Join the group**. A muted accent tint that fades into the page below (no border) and fades back to the page colour over the first ~260 px of scrolling.
 - **Hero (compact)**: club name, one line about the club, floating tilted posters (our own).
 - **Closing soon** strip: up to 4 compact tiles for deadlines in the next 7 days.
 - **Board header**: "Upcoming / Archive" as large Sentient tabs with counts, plus a search icon that expands into a field (`/` shortcut). Searches title, organiser, city, themes.
@@ -147,6 +147,11 @@ Lines with no data are left out. Rolling listings show "⏳ *Registration:* open
 - **Timeline**, grouped by **registration deadline date** (left column: a "Registration closes" caption over "25 Oct / Sunday"; the caption follows the sort). Event dates on cards are labelled "Event" so they aren't mistaken for the deadline. Each card has the same layout: closing time → **title** → organiser · city · mode → team · prize · fee → status label, with the poster thumbnail on the right.
 - **Rolling** group at the end for listings with no deadline.
 - **Upcoming | Archive** toggle, like Luma's Upcoming | Past.
+
+- **Your folder (saved hackathons)**: a bookmark toggle on every card (over the poster's corner; on hover on desktop, always on touch) and a **Save** button in the side panel and on the hackathon page. Saved slugs live only in the browser (`localStorage`, key `arj-saved`): no accounts, nothing on the server, so they stay on that device; tabs stay in sync.
+  - The corner folder (artwork from Uiverse.io by junaid_3671) holds the saved posters; with nothing saved it shows the 3 closing soonest ("CLOSING SOON"). Hidden while the hero is on screen and while the panel is open; bounces when something is saved.
+  - Opened, a tray lists them: poster, title, live countdown, **Register ↗**, **Remove**, and **Add all deadlines to calendar** (one `.ics` with a reminder a day before each). Phones: a small "Saved · 2" pill and a bottom sheet instead of the folder artwork.
+  - Deadline reminders (push notifications) are planned on top of this.
 
 ### 8.3 Status rules (IST)
 | Status | When |
@@ -159,6 +164,7 @@ Lines with no data are left out. Rolling listings show "⏳ *Registration:* open
 Sorted by deadline (soonest first), ties broken by event start.
 
 ### 8.4 Hackathon detail
+The side panel is frosted glass (the board shows through, blurred) over a light scrim; on phones it's more opaque for reading.
 Poster → title → "by Organiser" → icon tiles: **Deadline · Dates · Location/Online · Team · Prize · Fee · Who can join** → countdown pill _"Registration closes in **2d 5h**"_ → summary, how it works, themes.
 Actions: **Register ↗** (sticky at the bottom on mobile) · **Add deadline to Google Calendar** · Add event dates · Copy link / Share.
 Desktop side panel: ↑ ↓ to move to the next/previous hackathon, Esc to close.
@@ -183,7 +189,7 @@ Link previews (WhatsApp, etc.) use the **poster** as the image.
 - Gotcha: Cloudflare Pages redirects `*.html` to pretty URLs, so the offline page (`apps/web/sw/offline.html`) is built into `sw.js` instead of being a separate file.
 
 ### 8.7 Logo (18 Oct)
-A split-flap tile (departure board, matching the flip clock and boarding-pass posters) showing a question mark whose dot is a lime text cursor. Sources and exports live in `brand/` (see `brand/README.md`). It is used for the favicon, the app icons (including the admin variant labelled ADMIN), next to the wordmark in the site and admin headers and footer, and as the Telegram bot / WhatsApp group avatar.
+A split-flap tile (departure board, matching the departure-board theme and boarding-pass posters) showing a question mark whose dot is a lime text cursor. Sources and exports live in `brand/` (see `brand/README.md`). It is used for the favicon, the app icons (including the admin variant labelled ADMIN), next to the wordmark in the site and admin headers and footer, and as the Telegram bot / WhatsApp group avatar.
 
 ## 9. Design system: "dark grey, done really well"
 
@@ -204,7 +210,7 @@ A split-flap tile (departure board, matching the flip clock and boarding-pass po
 - **Type**: **Sentient** (serif, Fontshare) for big titles and the hero · **General Sans** (Fontshare) for all UI and body text · **JetBrains Mono** for times, countdowns and labels ("CLOSES 11:59 PM"). Self-hosted.
 - **Shape**: 12 px card corners, 8 px for chips/tiles, 4-pt spacing scale, max content width ~720 px for the timeline.
 - **Icons**: Phosphor (regular weight).
-- **Motion**: 150–250 ms, only on interaction (side panel slide, hover). The split-flap clock/countdown is the one decorative touch. Respects reduced-motion settings.
+- **Motion**: 150–250 ms, only on interaction (side panel slide, hover). The rotating hero deck and the corner folder are the decorative touches. Respects reduced-motion settings.
 - **Responsive**: mobile-first from 360 px. On mobile, filters live in a bottom sheet and details open as a full page.
 - **Quality bar**: WCAG AA contrast, full keyboard navigation, fast on 4G.
 

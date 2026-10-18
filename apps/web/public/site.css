@@ -243,7 +243,7 @@ button {
   right: 0;
   top: 100%;
   height: 36px;
-  background: linear-gradient(var(--top-bg), transparent);
+  background: linear-gradient(to bottom, var(--top-bg), transparent);
   pointer-events: none;
 }
 /* Once scrolled, the same tint goes slightly see-through and frosts over the content. */
@@ -298,57 +298,16 @@ button {
   align-items: center;
   gap: 16px;
 }
-.clock {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--t2);
-  font-size: 13px;
-}
-.flaps {
-  display: flex;
-  gap: 2px;
-  perspective: 200px;
-}
-.flap {
-  display: inline-block;
-  min-width: 0.62em;
-  text-align: center;
-  background: var(--raised);
-  border-radius: 3px;
-  padding: 1px 2px;
-  color: var(--t1);
-  transform-origin: 50% 50%;
-}
-.flap.colon {
-  background: none;
-  min-width: auto;
-  padding: 0;
-  color: var(--t3);
-}
-.flap.flip {
-  animation: flip 0.38s cubic-bezier(0.3, 0.7, 0.3, 1);
-}
-@keyframes flip {
-  0% {
-    transform: rotateX(0);
-  }
-  45% {
-    transform: rotateX(-88deg);
-    opacity: 0.4;
-  }
-  55% {
-    transform: rotateX(88deg);
-    opacity: 0.4;
-  }
-  100% {
-    transform: rotateX(0);
-  }
+/* The navbar install button: "Get the app" on wide screens, "Install" on phones. */
+.top .lbl-short {
+  display: none;
 }
 @media (max-width: 720px) {
-  .nav,
-  .clock .tz {
+  .nav {
     display: none;
+  }
+  .top .lbl-short {
+    display: inline;
   }
   .top-in {
     gap: 12px;
@@ -384,13 +343,6 @@ button {
   }
   .top-right {
     gap: 20px;
-  }
-  .clock {
-    font-size: 15px;
-  }
-  .flap {
-    padding: 2px 3px;
-    border-radius: 4px;
   }
   .top .btn {
     height: 46px;
@@ -1624,7 +1576,7 @@ html:not(.tw) .hero h1 .acc,
   }
 }
 
-/* ───────────── Deadline-approaching folder (from Uiverse.io by junaid_3671) ───────────── */
+/* ───────────── Your folder: saved hackathons (artwork from Uiverse.io by junaid_3671) ───────────── */
 /* Drawn at its original 321×270 and scaled into the corner; transforms keep hit-testing true to what you see. */
 .fd {
   --fd-back: #000;
@@ -1632,7 +1584,7 @@ html:not(.tw) .hero h1 .acc,
   --fd-flap-fill: #292929;
   --fd-flap-opacity: 0.25;
   --fd-flap-stroke: #979797;
-  --fd-scale: 0.5;
+  --fd-scale: 0.56;
   position: fixed;
   right: max(20px, env(safe-area-inset-right));
   bottom: max(20px, env(safe-area-inset-bottom));
@@ -1644,12 +1596,28 @@ html:not(.tw) .hero h1 .acc,
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  transition: opacity 0.2s;
+  transition:
+    opacity 0.25s,
+    translate 0.25s;
 }
-/* Out of the way while the details panel is open. */
+/* Out of the way while the hero is on screen, while the details panel is open, and when there's nothing to show. */
+.fd.away,
 html.lock .fd {
   opacity: 0;
+  translate: 0 16px;
   pointer-events: none;
+}
+.fd.none {
+  display: none;
+}
+/* A bounce after saving, so you see where it went. */
+.fd.bump {
+  animation: fd-bump 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes fd-bump {
+  40% {
+    translate: 0 -14px;
+  }
 }
 .fd-toggle {
   position: absolute;
@@ -1657,9 +1625,6 @@ html.lock .fd {
   z-index: 3;
   opacity: 0;
   cursor: pointer;
-}
-.fd.open .fd-toggle {
-  inset: 40% 0 0;
 }
 .fd-stage {
   position: absolute;
@@ -1697,9 +1662,8 @@ html.lock .fd {
   box-shadow:
     0 12px 30px -10px rgba(0, 0, 0, 0.8),
     0 0 0 1px rgba(255, 255, 255, 0.08);
-  transition:
-    transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15),
-    width 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15);
 }
 .fd-card img,
 .fd-card .poster {
@@ -1718,58 +1682,15 @@ html.lock .fd {
 .fd-card-3 {
   transform: translate(-50%, -50%) translate(-40px, -22px) rotate(-5deg);
 }
-.fd:not(.open) .fd-card {
-  pointer-events: none;
-}
-.fd.open .fd-card {
-  transform: translate(-50%, -50%) translate(var(--fd-x), var(--fd-y)) rotate(var(--fd-r));
-}
+/* Opened, the posters lift out of the folder while the tray shows the details. */
 .fd.open .fd-card-1 {
-  --fd-x: 84px;
-  --fd-y: -170px;
-  --fd-r: 12deg;
-  transition-delay: 0.1s;
+  transform: translate(-50%, -50%) translate(46px, -48px) rotate(15deg);
 }
 .fd.open .fd-card-2 {
-  --fd-x: 0px;
-  --fd-y: -190px;
-  --fd-r: -2deg;
-  transition-delay: 0.05s;
+  transform: translate(-50%, -50%) translate(3px, -58px) rotate(-1deg);
 }
 .fd.open .fd-card-3 {
-  --fd-x: -92px;
-  --fd-y: -175px;
-  --fd-r: -13deg;
-  transition-delay: 0s;
-}
-.fd.open .fd-card:hover,
-.fd.open .fd-card:focus-visible {
-  z-index: 6;
-  transform: translate(-50%, -50%) translate(var(--fd-x), calc(var(--fd-y) - 25px)) rotate(0deg) scale(1.06);
-  transition-delay: 0s;
-}
-/* Desktop: the folder stays small, but the posters that come out grow to a readable size.
-   They fan mostly to the left so the right-hand one stays on screen. */
-@media (min-width: 721px) {
-  .fd.open .fd-card {
-    width: 240px;
-    border-radius: 16px;
-  }
-  .fd.open .fd-card-1 {
-    --fd-x: 14px;
-    --fd-y: -300px;
-    --fd-r: 9deg;
-  }
-  .fd.open .fd-card-2 {
-    --fd-x: -136px;
-    --fd-y: -320px;
-    --fd-r: -2deg;
-  }
-  .fd.open .fd-card-3 {
-    --fd-x: -286px;
-    --fd-y: -295px;
-    --fd-r: -10deg;
-  }
+  transform: translate(-50%, -50%) translate(-46px, -52px) rotate(-11deg);
 }
 .fd-flap {
   position: absolute;
@@ -1830,7 +1751,7 @@ html.lock .fd {
   white-space: nowrap;
   color: var(--t1);
 }
-/* Same amber as "Closing this week". */
+/* Amber (like "Closing this week") for the closing-soon fallback; the accent once you've saved something. */
 .fd-dot {
   width: 12px;
   height: 12px;
@@ -1839,11 +1760,272 @@ html.lock .fd {
   background: var(--last);
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--last) 24%, transparent);
 }
+.fd.has-saved .fd-dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+/* Phones: a small pill instead of the folder artwork. */
+.fd-pill {
+  display: none;
+}
 @media (max-width: 720px) {
   .fd {
-    --fd-scale: 0.38;
+    display: none;
+  }
+  .fd-pill {
+    position: fixed;
     right: max(14px, env(safe-area-inset-right));
     bottom: max(14px, env(safe-area-inset-bottom));
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 16px 0 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    color: var(--t1);
+    background: color-mix(in srgb, var(--raised) 80%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
+    transition:
+      opacity 0.25s,
+      translate 0.25s;
+  }
+  .fd-pill .i {
+    font-size: 18px;
+    color: var(--last);
+  }
+  .fd-pill.has-saved .i {
+    color: var(--accent);
+  }
+  .fd-pill.away,
+  html.lock .fd-pill {
+    opacity: 0;
+    translate: 0 16px;
+    pointer-events: none;
+  }
+  .fd-pill.none {
+    display: none;
+  }
+  .fd-pill.bump {
+    animation: fd-bump 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+}
+
+/* The tray: what's in the folder, readable. A popover above the folder; a bottom sheet on phones. */
+.tray {
+  position: fixed;
+  z-index: 26;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: calc(max(20px, env(safe-area-inset-bottom)) + 270px * 0.56 + 18px);
+  width: 380px;
+  max-height: min(520px, calc(100vh - 290px));
+  display: none;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--raised) 86%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.7);
+}
+.tray.on {
+  display: flex;
+  animation: pop 0.16s ease-out;
+}
+.tray-scrim {
+  display: none;
+}
+.tray-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 12px 10px 16px;
+}
+.tray-h b {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 1.2;
+}
+.tray-h .mono {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--t3);
+}
+.tray-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px;
+  overflow-y: auto;
+}
+.ti {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 10px;
+}
+.ti:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.ti-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+.ti-thumb {
+  width: 44px;
+  flex: none;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.ti-thumb img,
+.ti-thumb .poster {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+.ti-txt {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ti-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.ti-cd {
+  font-size: 11.5px;
+  color: var(--last);
+}
+.ti-cd.done,
+.ti.done .ti-title {
+  color: var(--t3);
+}
+.ti .icon-btn {
+  flex: none;
+}
+.tray-f {
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+.tray-f .btn {
+  width: 100%;
+  justify-content: center;
+}
+.tray-f p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--t2);
+}
+.tray-f p .i {
+  vertical-align: -2px;
+  color: var(--accent);
+}
+.tray-f .tray-note {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--t3);
+}
+@media (max-width: 720px) {
+  .tray {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 27;
+    width: auto;
+    max-height: 75vh;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: none;
+  }
+  .tray-scrim.on {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 26;
+    background: rgba(8, 8, 10, 0.55);
+  }
+}
+
+/* ───────────── Save toggle on cards ───────────── */
+.card-w {
+  position: relative;
+}
+.save {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--t1);
+  background: rgba(14, 14, 16, 0.62);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    transform 0.15s,
+    background 0.15s;
+}
+.save .i {
+  font-size: 16px;
+}
+/* Shown on hover/focus on desktop; always on touch screens; always once saved. */
+.card-w:hover .save,
+.save:focus-visible,
+.save.on {
+  opacity: 1;
+}
+@media (hover: none) {
+  .save {
+    opacity: 1;
+  }
+}
+.save:hover {
+  transform: scale(1.08);
+  background: rgba(14, 14, 16, 0.8);
+}
+.save.on {
+  color: var(--accent);
+}
+/* Save buttons with a label (panel and hackathon page). */
+[data-save].on:not(.save) {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+@media (max-width: 720px) {
+  .save {
+    top: 20px;
+    right: 20px;
+    width: 30px;
+    height: 30px;
   }
 }
 
@@ -1852,7 +2034,7 @@ html.lock .fd {
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(8, 8, 10, 0.55);
+  background: rgba(8, 8, 10, 0.32);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s;
@@ -1868,12 +2050,16 @@ html.lock .fd {
   right: 12px;
   bottom: 12px;
   width: min(540px, calc(100vw - 24px));
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+  -webkit-backdrop-filter: blur(28px) saturate(1.35);
+  backdrop-filter: blur(28px) saturate(1.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 30px 90px rgba(0, 0, 0, 0.55);
   transform: translateX(28px);
   opacity: 0;
   visibility: hidden;
@@ -2151,6 +2337,7 @@ html.lock .fd {
     border: 0;
     border-radius: 0;
     transform: translateY(18px);
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
   }
   .pbar .x-d {
     display: none;
@@ -2165,7 +2352,7 @@ html.lock .fd {
     display: block;
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
-    background: var(--surface);
+    background: transparent;
   }
   .pfoot .btn {
     width: 100%;

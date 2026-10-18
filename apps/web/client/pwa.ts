@@ -4,6 +4,7 @@
 // ~10 seconds of active use we slide up a small "Get the app" card. Its Install button opens Chrome/Edge's
 // native dialog (Android, desktop). iPhone has no install API, so there the card shows the two Safari steps.
 // The card never shows inside the installed app, after installing, or for 14 days after "Not now".
+// The navbar's "Get the app" button does the same on demand: the native dialog, or the Safari steps on iPhone.
 import { icon } from "../shared/render";
 
 interface InstallPromptEvent extends Event {
@@ -62,6 +63,13 @@ export function setupPwa(toast: (message: string) => void): void {
   let deferred: InstallPromptEvent | null = null;
 
   const footerButtons = () => document.querySelectorAll<HTMLElement>("[data-install]");
+  const topButtons = () => document.querySelectorAll<HTMLElement>("[data-top-install]");
+  // The navbar button shows whenever this browser can install (or, on iPhone, explain how).
+  function syncTopButtons() {
+    const can = !store.get(localStorage, KEY_INSTALLED) && (!!deferred || iosSafari);
+    for (const b of topButtons()) b.hidden = !can;
+  }
+  syncTopButtons();
 
   // Chrome/Edge/Android: keep the event so our own buttons can open the native dialog later.
   window.addEventListener("beforeinstallprompt", (e) => {
@@ -72,6 +80,7 @@ export function setupPwa(toast: (message: string) => void): void {
       const fallback = b.nextElementSibling as HTMLElement | null;
       if (fallback?.classList.contains("install-fallback")) fallback.hidden = true;
     }
+    syncTopButtons();
     maybeShowCard();
   });
 
@@ -85,16 +94,27 @@ export function setupPwa(toast: (message: string) => void): void {
       store.set(localStorage, KEY_INSTALLED, "1");
       for (const b of footerButtons()) b.hidden = true;
     }
+    syncTopButtons();
     return outcome === "accepted";
   }
 
   document.addEventListener("click", (e) => {
-    if ((e.target as HTMLElement).closest("[data-install]")) void nativeInstall();
+    const target = e.target as HTMLElement;
+    if (target.closest("[data-install]")) void nativeInstall();
+    if (target.closest("[data-top-install]")) {
+      if (deferred) void nativeInstall();
+      else if (iosSafari) {
+        // No install API on iPhone: show the card with the Safari steps, even if it was snoozed.
+        hideCard();
+        showCard();
+      }
+    }
   });
 
   window.addEventListener("appinstalled", () => {
     store.set(localStorage, KEY_INSTALLED, "1");
     for (const b of footerButtons()) b.hidden = true;
+    syncTopButtons();
     hideCard();
     toast("Installed. Find arinjilley? on your home screen.");
   });

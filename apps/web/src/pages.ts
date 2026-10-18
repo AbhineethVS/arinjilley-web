@@ -92,7 +92,7 @@ ${og ? `<meta property="og:image" content="${esc(og)}"><meta name="twitter:card"
     <a href="/" class="logo" aria-label="arinjilley? home">${LOGO_MARK}<span>arinjilley<span class="q">?</span></span></a>
     <nav class="nav" aria-label="Main">${nav("home", "/", "Hackathons")}${nav("archive", "/archive", "Archive")}${nav("about", "/about", "About")}</nav>
     <div class="top-right">
-      <div class="clock mono" role="timer" aria-live="off"><span class="sr" id="clockSr">Time in India</span><span class="flaps" id="clock" aria-hidden="true"></span><span class="tz" aria-hidden="true">IST</span></div>
+      <button type="button" class="btn btn-ghost btn-sm" data-top-install hidden>${icon("device-mobile")}<span class="lbl-long">Get the app</span><span class="lbl-short">Install</span></button>
       <a href="${esc(ctx.groupUrl)}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">${icon("whatsapp-logo")}<span class="lbl-long">Join the group</span><span class="sr">Join the WhatsApp group</span></a>
     </div>
   </div>
@@ -157,36 +157,26 @@ function heroPosters(list: WebListing[], now: number): string {
   return fan && `${fan}${pager}`;
 }
 
-// Folder in the corner holding the three posters whose registration closes soonest (folder from Uiverse.io by junaid_3671).
+// "Your folder" in the corner: saved hackathons (client/saved.ts fills it in). Folder artwork from Uiverse.io
+// by junaid_3671. Phones get a small pill instead. Both open the same tray.
 const FOLDER_PATH =
   "M0 25C0 11.1929 11.1929 0 25 0H136.084C143.044 0 149.689 2.90139 154.42 8.00608L178.08 33.5343C182.811 38.639 189.456 41.5404 196.416 41.5404H296C309.807 41.5404 321 52.7333 321 66.5404V216C321 229.807 309.807 241 296 241H25C11.1929 241 0 229.807 0 216V25Z";
-function closingFolder(list: WebListing[], now: number): string {
-  // Only hackathons with a real deadline still ahead; rolling ones have nothing to count down to.
-  const closing = list
-    .filter((h) => h.deadline && deadlineInstant(h.deadline) > now)
-    .sort((a, b) => deadlineInstant(a.deadline!) - deadlineInstant(b.deadline!))
-    .slice(0, 3);
-  if (!closing.length) return "";
-  // DOM order is paint order, so the one closing first goes last and sits on top.
-  const cards = closing
-    .map(
-      (h, i) =>
-        `<a class="fd-card fd-card-${i + 1}" href="/h/${esc(h.slug)}" data-slug="${esc(h.slug)}" tabindex="-1" aria-hidden="true" aria-label="${esc(h.title)}">${art(h)}</a>`,
-    )
-    .reverse()
-    .join("");
-  return `<div class="fd" id="folder">
-  <button type="button" class="fd-toggle" id="folderBtn" aria-expanded="false" aria-controls="folder">Deadline approaching: ${closing.length} ${closing.length === 1 ? "hackathon closes" : "hackathons close"} soonest</button>
+function folderShell(): string {
+  return `<div class="fd away none" id="folder">
+  <button type="button" class="fd-toggle" id="folderBtn" aria-expanded="false" aria-controls="tray">Your folder</button>
   <div class="fd-stage" aria-hidden="true">
     <div class="fd-back"></div>
-    <div class="fd-cards">${cards}</div>
+    <div class="fd-cards" id="fdCards"></div>
     <div class="fd-flap">
       <div class="fd-flap-blur" style="clip-path:path('${FOLDER_PATH}');-webkit-clip-path:path('${FOLDER_PATH}')"></div>
       <svg viewBox="0 0 321 241" width="321" height="241"><path d="${FOLDER_PATH}" fill="var(--fd-flap-fill)" fill-opacity="var(--fd-flap-opacity)" stroke="var(--fd-flap-stroke)"/></svg>
-      <span class="fd-label mono"><i class="fd-dot"></i>DEADLINE APPROACHING</span>
+      <span class="fd-label mono"><i class="fd-dot"></i><span id="fdLabel">SAVED</span></span>
     </div>
   </div>
-</div>`;
+</div>
+<button type="button" class="fd-pill away none" id="fdPill" aria-expanded="false" aria-controls="tray">${icon("folder-simple")}<span id="fdPillLabel">Saved</span></button>
+<div class="tray-scrim" id="trayScrim"></div>
+<div class="tray" id="tray" role="dialog" aria-label="Your folder"></div>`;
 }
 
 export function homePage(
@@ -235,11 +225,12 @@ export function homePage(
     ${footer(ctx)}
   </div>
 </main>
-${closingFolder(list, now)}
+${folderShell()}
 <div class="scrim" id="scrim"></div>
 <aside class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Hackathon details">
   <div class="pbar">
     <button class="icon-btn x-d" id="pClose" aria-label="Close">${icon("caret-double-right")}</button>
+    <button type="button" class="btn btn-ghost btn-sm" id="pSave" data-save="" aria-pressed="false">${icon("bookmark-simple")}<span class="save-l">Save</span></button>
     <button class="btn btn-ghost btn-sm" id="pCopy">${icon("copy")}Copy link</button>
     <a class="btn btn-ghost btn-sm reg-d" id="pReg" target="_blank" rel="noopener">Register${icon("arrow-up-right")}</a>
     <span class="sp"></span>

@@ -170,11 +170,16 @@ describe("sorting", () => {
   it("starting soonest groups by event start, ongoing first, undated last", () => {
     const g = boardGroups(list, NOW, "upcoming", "starting");
     expect(slugs(g)).toEqual(["running", "b", "a", "tba"]);
-    expect(g.map((x) => x.kicker)).toEqual(["Event started", "Event starts", "Event starts", undefined]);
+    expect(g.map((x) => x.kicker)).toEqual(["Event started", "Event starts", undefined, undefined]);
     expect(g.at(-1)!.label).toBe("Dates TBA");
   });
   it("recently added is newest first", () => {
     expect(slugs(boardGroups(list, NOW, "upcoming", "added"))).toEqual(["a", "running", "b", "tba"]);
+  });
+  it("cards carry a Save toggle", () => {
+    const html = card(list[0]!, NOW);
+    expect(html).toContain('data-save="a"');
+    expect(html).toContain('</a><button type="button" class="save"'); // beside the link, not inside it
   });
   it("the archive ignores the sort", () => {
     const past = [listing({ slug: "old", deadline: parseIst("2026-09-01") })];

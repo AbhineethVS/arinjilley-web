@@ -82,7 +82,7 @@ export function card(h: WebListing, now: number): string {
     h.prizeShort ? `<span class="fact">${icon("trophy")}${esc(h.prizeShort)}</span>` : "",
     fee ? `<span class="fact">${icon("ticket")}${esc(fee)}</span>` : "",
   ].join("");
-  return `<a class="card${st === "archived" ? " archived" : ""}" href="/h/${esc(h.slug)}" data-slug="${esc(h.slug)}">
+  return `<div class="card-w"><a class="card${st === "archived" ? " archived" : ""}" href="/h/${esc(h.slug)}" data-slug="${esc(h.slug)}">
   <div class="card-body">
     <div class="card-main">
       <div class="card-top"><span class="pill ${PILL[st]}">${STATUS_LABEL[st]}</span>${time}</div>
@@ -93,7 +93,7 @@ export function card(h: WebListing, now: number): string {
     ${facts ? `<div class="facts">${facts}</div>` : ""}
   </div>
   <div class="card-thumb">${art(h)}</div>
-</a>`;
+</a><button type="button" class="save" data-save="${esc(h.slug)}" aria-pressed="false" aria-label="Save to your folder">${icon("bookmark-simple")}</button></div>`;
 }
 
 interface Group {
@@ -140,7 +140,8 @@ export function upcomingGroups(list: WebListing[], now: number): Group[] {
   return out;
 }
 
-/** One timeline group per IST day, captioned by `kicker`; items keep their order. */
+/** One timeline group per IST day; items keep their order. Like the deadline view, the caption appears on the
+ * first group and again only when it changes ("Event started" → "Event starts"). */
 function dayGroups(
   items: { h: WebListing; at: number }[],
   now: number,
@@ -148,18 +149,21 @@ function dayGroups(
 ): Group[] {
   const todayK = istDayKey(now);
   const groups = new Map<number, Group>();
+  let lastKicker: string | undefined;
   for (const { h, at } of items) {
     const k = istDayKey(at);
     if (!groups.has(k)) {
+      const cap = kicker(k, todayK);
       const sub =
         k === todayK + 1 ? "Tomorrow" : k === todayK - 1 ? "Yesterday" : WEEKDAYS[istParts(at).weekday]!;
       groups.set(k, {
-        kicker: kicker(k, todayK),
+        kicker: cap === lastKicker ? undefined : cap,
         label: k === todayK ? "Today" : dayMonth(at),
         sub,
         today: k === todayK,
         items: [],
       });
+      lastKicker = cap;
     }
     groups.get(k)!.items.push(h);
   }
@@ -491,7 +495,8 @@ ${h.organiser ? `<div class="d-by"><span class="av">${icon("buildings")}</span>b
   <h3>${title}</h3><p>${text}</p>
   <div class="cta-actions">
     ${h.registerUrl ? `<a class="btn btn-primary" href="${esc(h.registerUrl)}" target="_blank" rel="noopener">Register on ${esc(host)}${icon("arrow-up-right")}</a>` : ""}
-    ${link(dl, "alarm", "Add deadline")}
+    <button type="button" class="btn btn-ghost btn-sm" data-save="${esc(h.slug)}" aria-pressed="false">${icon("bookmark-simple")}<span class="save-l">Save</span></button>
+${link(dl, "alarm", "Add deadline")}
     ${link(ev, "calendar-plus", "Add event dates")}
   </div>
 </div>
