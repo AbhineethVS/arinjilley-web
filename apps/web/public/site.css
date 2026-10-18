@@ -60,10 +60,11 @@
   --border-strong: rgba(255, 255, 255, 0.12);
   --t1: #f2f2f3;
   --t2: #a3a3ab;
-  --t3: #6f6f78;
+  /* 5.6:1 on the page, 4.6:1 on raised panels: small grey labels pass WCAG AA. */
+  --t3: #8e8e97;
   --open: #3dd68c;
   --last: #f5a524;
-  --closed: #8a8a93;
+  --closed: #92929b;
   --accent: #c8f560;
   --font-ui: "General Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Sentient", Georgia, serif;
@@ -117,6 +118,21 @@ button {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+}
+.skip {
+  position: fixed;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  color: #111;
+  background: var(--accent);
+  transition: top 0.15s;
+}
+.skip:focus {
+  top: 12px;
 }
 .sr {
   position: absolute;
@@ -213,12 +229,24 @@ button {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: var(--bg);
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
+  /* A dark bar washed with this visit's accent, frosted over whatever scrolls beneath it. */
+  background: color-mix(in srgb, color-mix(in srgb, var(--accent) 9%, #141417) 86%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 .top.scrolled {
-  border-bottom-color: var(--border);
+  border-bottom-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 30px -12px rgba(0, 0, 0, 0.7);
+}
+.top .nav a[aria-current="page"] {
+  background: color-mix(in srgb, var(--accent) 14%, var(--raised));
 }
 .top-in {
   height: var(--top-h);
@@ -323,6 +351,51 @@ button {
   }
 }
 
+/* Larger top bar on desktop and tablet */
+@media (min-width: 721px) {
+  :root {
+    --top-h: 76px;
+  }
+  .top-in {
+    gap: 36px;
+  }
+  .top .logo {
+    font-size: 28px;
+    gap: 11px;
+  }
+  .top .logo-mark {
+    width: 30px;
+    height: 34px;
+  }
+  .nav {
+    gap: 4px;
+  }
+  .nav a {
+    padding: 9px 15px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+  .top-right {
+    gap: 20px;
+  }
+  .clock {
+    font-size: 15px;
+  }
+  .flap {
+    padding: 2px 3px;
+    border-radius: 4px;
+  }
+  .top .btn {
+    height: 46px;
+    padding: 0 20px;
+    font-size: 15.5px;
+    border-radius: 12px;
+  }
+  .top .btn .i {
+    font-size: 19px;
+  }
+}
+
 /* ───────────── Hero ───────────── */
 .hero {
   position: relative;
@@ -347,6 +420,70 @@ button {
 }
 .hero h1 .acc {
   color: var(--accent);
+}
+/* Typed in by app.ts on load: untyped letters keep their space (no layout jump), a caret leads the way. */
+html.tw .hero h1:not(.typing) {
+  visibility: hidden;
+  animation: twFallback 0s 2.5s forwards;
+}
+.hero h1 .tc:not(.on) {
+  visibility: hidden;
+}
+.hero h1 .tw-word {
+  white-space: nowrap;
+}
+.hero h1 .tc {
+  position: relative;
+}
+/* The caret hangs off the current letter (absolute, so it never affects wrapping) and keeps blinking once done. */
+.hero h1 .tc.cur::after {
+  content: "";
+  visibility: visible;
+  position: absolute;
+  left: calc(100% + 0.05em);
+  bottom: 0.06em;
+  width: 0.065em;
+  height: 0.92em;
+  border-radius: 0.03em;
+  background: var(--accent);
+  animation: caretBlink 1.05s steps(1) infinite;
+}
+.hero h1 .tc.cur.pre::after {
+  left: -0.02em;
+}
+.hero h1.busy .tc.cur::after {
+  animation: none;
+}
+@keyframes caretBlink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes twFallback {
+  to {
+    visibility: visible;
+  }
+}
+/* Once typing finishes, a hand-drawn underline sweeps under the accent line. */
+.hero h1 .acc {
+  /* Stays a plain inline span: as an inline-block it re-measured mid-typing and briefly wrapped "to." */
+  background:
+    linear-gradient(color-mix(in srgb, var(--accent) 55%, transparent) 0 0) no-repeat 0.04em 92% / 0 0.07em;
+}
+html:not(.tw) .hero h1 .acc,
+.hero h1.typed .acc {
+  animation: sweep 0.7s cubic-bezier(0.6, 0, 0.2, 1) 0.15s forwards;
+}
+@keyframes sweep {
+  to {
+    background-size: calc(100% - 0.08em) 0.07em;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero h1 .acc {
+    animation: none;
+    background-size: calc(100% - 0.08em) 0.07em;
+  }
 }
 .hero p {
   color: var(--t2);
@@ -375,38 +512,145 @@ button {
   color: var(--t1);
   font-weight: 500;
 }
-.float {
-  position: absolute;
-  z-index: 1;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow:
-    0 30px 60px -20px rgba(0, 0, 0, 0.75),
-    0 0 0 1px rgba(255, 255, 255, 0.07);
-  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.float:hover {
-  transform: rotate(0deg) scale(1.04) !important;
-  z-index: 3;
-}
 .hero-fan {
-  display: none;
   position: relative;
-  height: 168px;
-  margin: 0 auto 28px;
-  width: 280px;
+  width: min(320px, 100%);
+  aspect-ratio: 320 / 212;
+  margin: 0 auto 36px;
 }
 .hero-fan .fp {
   position: absolute;
-  top: 10px;
-  width: 104px;
+  top: 7%;
+  left: 28.75%;
+  width: 42.5%;
   border-radius: 9px;
   overflow: hidden;
   box-shadow:
     0 20px 40px -14px rgba(0, 0, 0, 0.8),
     0 0 0 1px rgba(255, 255, 255, 0.07);
+  transition:
+    transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.5s ease,
+    filter 0.5s ease,
+    box-shadow 0.5s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.float img,
+/* Front card swings out to the left and tucks behind the next one (z-index flips instantly, transform eases).
+   The card that reaches the front grows; the two behind it shrink back and dim. */
+.hero-fan .fp[data-pos="0"] {
+  z-index: 3;
+  transform: scale(1.14);
+  box-shadow:
+    0 30px 55px -16px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.hero-fan .fp[data-pos="1"] {
+  z-index: 2;
+  transform: translateX(70%) translateY(10px) rotate(10deg) scale(0.9);
+  filter: brightness(0.82);
+}
+.hero-fan .fp[data-pos="-1"] {
+  z-index: 1;
+  transform: translateX(-70%) translateY(10px) rotate(-10deg) scale(0.9);
+  filter: brightness(0.82);
+}
+.hero-fan .fp[data-pos="x"],
+.hero-fan .fp[data-pos="2"],
+.hero-fan .fp[data-pos="-2"] {
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px) scale(0.86);
+}
+.hero-fan {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.fan-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.fan-pips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* Pause / play: two bars, or a triangle once paused. */
+.fan-pause {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  color: var(--t2);
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.fan-pause:hover {
+  color: var(--t1);
+  border-color: var(--t3);
+}
+.fan-pause::before,
+.fan-pause::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  width: 3px;
+  height: 9px;
+  border-radius: 1px;
+  background: currentColor;
+}
+.fan-pause::before {
+  left: 8px;
+}
+.fan-pause::after {
+  left: 12px;
+}
+.fan-pause[aria-pressed="true"]::after {
+  display: none;
+}
+.fan-pause[aria-pressed="true"]::before {
+  left: 9px;
+  top: 7px;
+  width: 0;
+  height: 0;
+  border-radius: 0;
+  background: none;
+  border-style: solid;
+  border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent currentColor;
+}
+.fan-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--t3);
+  opacity: 0.5;
+  transition:
+    width 0.3s,
+    background 0.3s,
+    opacity 0.3s;
+}
+.fan-dots i.on {
+  width: 16px;
+  border-radius: 3px;
+  background: var(--accent);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-fan .fp {
+    transition: opacity 0.2s;
+  }
+}
 .fp img,
 .soon-thumb img,
 .card-thumb img,
@@ -416,18 +660,91 @@ button {
   aspect-ratio: 4 / 5;
   object-fit: cover;
 }
-@media (max-width: 1180px) {
-  .float.outer {
-    display: none;
+/* Desktop: heading on the left, deck on the right. Mobile: deck first, text centred under it. */
+.hero {
+  display: flex;
+  flex-direction: column;
+}
+.hero-fan {
+  order: -1;
+}
+@media (min-width: 981px) {
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 40px;
+  }
+  .hero-text {
+    margin: 0;
+    text-align: left;
+  }
+  .hero p {
+    margin-left: 0;
+  }
+  .hero-cta,
+  .hero-stats {
+    justify-content: flex-start;
+  }
+  .hero-fan {
+    order: 0;
+    width: min(600px, 100%);
+    aspect-ratio: 600 / 400;
+    margin: 0 auto 20px;
+    cursor: grab;
+  }
+  .hero-fan:active {
+    cursor: grabbing;
+  }
+  /* Desktop: two cards fanned on each side; the card that reaches the centre grows as it comes forward. */
+  .hero-fan .fp {
+    top: 9%;
+    left: 30%;
+    width: 40%;
+    border-radius: 12px;
+    transition:
+      transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 0.5s ease,
+      box-shadow 0.5s ease;
+  }
+  .hero-fan .fp[data-pos="0"] {
+    z-index: 5;
+    transform: scale(1.14);
+    box-shadow:
+      0 40px 70px -20px rgba(0, 0, 0, 0.9),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+  .hero-fan .fp[data-pos="0"]:hover {
+    transform: translateY(-6px) scale(1.17);
+  }
+  .hero-fan .fp[data-pos="1"] {
+    z-index: 4;
+    transform: translateX(46%) translateY(6%) rotate(8deg) scale(0.9);
+  }
+  .hero-fan .fp[data-pos="-1"] {
+    z-index: 4;
+    transform: translateX(-46%) translateY(6%) rotate(-8deg) scale(0.9);
+  }
+  .hero-fan .fp[data-pos="2"] {
+    z-index: 3;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(84%) translateY(13%) rotate(15deg) scale(0.78);
+  }
+  .hero-fan .fp[data-pos="-2"] {
+    z-index: 3;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-84%) translateY(13%) rotate(-15deg) scale(0.78);
+  }
+  .hero-fan .fp[data-pos="1"],
+  .hero-fan .fp[data-pos="-1"],
+  .hero-fan .fp[data-pos="2"],
+  .hero-fan .fp[data-pos="-2"] {
+    filter: brightness(0.82);
   }
 }
 @media (max-width: 980px) {
-  .float {
-    display: none;
-  }
-  .hero-fan {
-    display: block;
-  }
   .hero {
     padding: 28px 0 48px;
   }
@@ -437,6 +754,13 @@ button {
 .board {
   max-width: 880px;
   margin: 0 auto;
+}
+/* Wide screens: the board uses the same width as the hero instead of a narrow centre column. */
+@media (min-width: 1100px) {
+  .wrap > .board,
+  .wrap > .soon {
+    max-width: none;
+  }
 }
 .sec-label {
   font-size: 11.5px;
@@ -464,13 +788,15 @@ button {
 }
 .soon-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 10px;
 }
+/* Tiles share the row: one closing hackathon gets a full-width strip, four get a compact grid.
+   The tile is the size container; its inner grid switches layout by the tile's own width. */
 .soon-tile {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+  container-type: inline-size;
+  display: block;
   padding: 10px 12px 10px 10px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -480,33 +806,103 @@ button {
     background 0.15s,
     border-color 0.15s;
 }
+.soon-in {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "thumb title"
+    "thumb cd";
+  column-gap: 12px;
+  align-items: center;
+  align-content: center;
+}
 .soon-tile:hover {
   background: var(--hover);
   border-color: var(--border-strong);
 }
 .soon-thumb {
+  grid-area: thumb;
   width: 38px;
-  flex: none;
   border-radius: 5px;
   overflow: hidden;
 }
-.soon-txt {
-  min-width: 0;
-}
 .soon-title {
+  grid-area: title;
+  align-self: end;
+  min-width: 0;
   font-weight: 600;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.soon-sub,
+.soon-go {
+  display: none;
+}
 .soon-cd {
+  grid-area: cd;
+  align-self: start;
   font-size: 11.5px;
   color: var(--t2);
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 .soon-cd.last {
   color: var(--last);
+}
+@container (min-width: 440px) {
+  .soon-in {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "thumb title cd go"
+      "thumb sub cd go";
+    column-gap: 16px;
+    padding: 2px 6px 2px 2px;
+  }
+  .soon-thumb {
+    width: 52px;
+    border-radius: 6px;
+  }
+  .soon-title {
+    font-size: 16px;
+  }
+  .soon-sub {
+    display: block;
+    grid-area: sub;
+    align-self: start;
+    min-width: 0;
+    font-size: 13.5px;
+    color: var(--t2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .soon-cd {
+    align-self: center;
+    font-size: 14px;
+    color: var(--t1);
+    padding: 7px 12px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--last) 12%, transparent);
+  }
+  .soon-cd.last {
+    color: var(--last);
+  }
+  .soon-go {
+    display: grid;
+    grid-area: go;
+    place-items: center;
+    font-size: 18px;
+    color: var(--t3);
+    transition:
+      color 0.15s,
+      transform 0.15s;
+  }
+  .soon-tile:hover .soon-go {
+    color: var(--t1);
+    transform: translate(2px, -2px);
+  }
 }
 @media (max-width: 860px) {
   .soon-row {
@@ -521,16 +917,16 @@ button {
     display: none;
   }
   .soon-tile {
-    flex: 0 0 232px;
+    flex: 1 0 232px;
     scroll-snap-align: start;
   }
 }
 
 /* ───────────── Board header: tabs, search, filter bar ───────────── */
 .bar {
-  padding: 6px 0 30px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 30px;
+  position: relative;
+  padding: 6px 0 0;
+  margin-bottom: 28px;
 }
 .bar-head {
   position: relative;
@@ -736,6 +1132,20 @@ button {
   text-transform: uppercase;
   color: var(--t3);
 }
+@media (min-width: 721px) {
+  /* Count and Reset ride on the tab row, left of the search button. */
+  .fmeta {
+    position: absolute;
+    top: 20px;
+    right: 56px;
+    margin: 0;
+    transition: opacity 0.15s;
+  }
+  .bar:has(.find.open) .fmeta {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
 .reset {
   font: inherit;
   letter-spacing: inherit;
@@ -914,7 +1324,7 @@ button {
 /* ───────────── Timeline ───────────── */
 .day {
   display: grid;
-  grid-template-columns: 118px 30px minmax(0, 1fr);
+  grid-template-columns: 104px 30px minmax(0, 1fr);
 }
 .day-date {
   padding-top: 15px;
@@ -1045,11 +1455,15 @@ button {
   color: var(--t3);
   font-size: 15px;
 }
+.card-main {
+  margin-bottom: 12px;
+  min-width: 0;
+}
 .facts {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 18px;
-  margin-top: 12px;
+  margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
@@ -1071,7 +1485,7 @@ button {
   color: var(--t3);
 }
 .card-thumb {
-  width: 100px;
+  width: 136px;
   flex: none;
   align-self: flex-start;
   border-radius: 8px;
@@ -1149,7 +1563,7 @@ button {
     gap: 14px;
   }
   .card-thumb {
-    width: 78px;
+    width: 88px;
   }
   .card-title {
     font-size: 16.5px;
@@ -1163,6 +1577,266 @@ button {
   }
   .fact {
     font-size: 13px;
+  }
+}
+
+/* Wide cards: text | facts stub | poster, so a full-width card has no dead middle. */
+@media (min-width: 1100px) {
+  .day {
+    grid-template-columns: 124px 34px minmax(0, 1fr);
+  }
+  .card {
+    gap: 24px;
+    padding: 18px 18px 18px 22px;
+  }
+  .card-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 230px;
+    column-gap: 24px;
+    align-items: center;
+  }
+  .card-main {
+    margin: 0;
+  }
+  .card-title {
+    font-size: 19px;
+  }
+  .facts {
+    align-self: stretch;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 12px;
+    margin: 0;
+    padding: 4px 0 4px 24px;
+    border-top: 0;
+    border-left: 1.5px dashed var(--border-strong);
+  }
+  .fact {
+    font-size: 14px;
+  }
+}
+
+/* ───────────── Deadline-approaching folder (from Uiverse.io by junaid_3671) ───────────── */
+/* Drawn at its original 321×270 and scaled into the corner; transforms keep hit-testing true to what you see. */
+.fd {
+  --fd-back: #000;
+  --fd-back-shadow: inset 0 0 6px 2px rgba(255, 255, 255, 0.37);
+  --fd-flap-fill: #292929;
+  --fd-flap-opacity: 0.25;
+  --fd-flap-stroke: #979797;
+  --fd-scale: 0.5;
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 25;
+  width: 321px;
+  height: 270px;
+  transform: scale(var(--fd-scale));
+  transform-origin: 100% 100%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: opacity 0.2s;
+}
+/* Out of the way while the details panel is open. */
+html.lock .fd {
+  opacity: 0;
+  pointer-events: none;
+}
+.fd-toggle {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  opacity: 0;
+  cursor: pointer;
+}
+.fd.open .fd-toggle {
+  inset: 40% 0 0;
+}
+.fd-stage {
+  position: absolute;
+  inset: 0;
+  perspective: 800px;
+}
+.fd-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 25px;
+  background: var(--fd-back);
+  box-shadow:
+    var(--fd-back-shadow),
+    0 24px 50px -18px rgba(0, 0, 0, 0.8);
+}
+.fd-toggle:focus-visible ~ .fd-stage .fd-back {
+  outline: 4px solid var(--accent);
+  outline-offset: 6px;
+}
+.fd-cards {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+.fd-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  width: 150px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 12px 30px -10px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15),
+    width 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+.fd-card img,
+.fd-card .poster {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+.fd-card-1 {
+  transform: translate(-50%, -50%) translate(40px, -10px) rotate(10deg);
+}
+.fd-card-2 {
+  transform: translate(-50%, -50%) translate(3px, -20px) rotate(2deg);
+  transition-delay: 0.02s;
+}
+.fd-card-3 {
+  transform: translate(-50%, -50%) translate(-40px, -22px) rotate(-5deg);
+}
+.fd:not(.open) .fd-card {
+  pointer-events: none;
+}
+.fd.open .fd-card {
+  transform: translate(-50%, -50%) translate(var(--fd-x), var(--fd-y)) rotate(var(--fd-r));
+}
+.fd.open .fd-card-1 {
+  --fd-x: 84px;
+  --fd-y: -170px;
+  --fd-r: 12deg;
+  transition-delay: 0.1s;
+}
+.fd.open .fd-card-2 {
+  --fd-x: 0px;
+  --fd-y: -190px;
+  --fd-r: -2deg;
+  transition-delay: 0.05s;
+}
+.fd.open .fd-card-3 {
+  --fd-x: -92px;
+  --fd-y: -175px;
+  --fd-r: -13deg;
+  transition-delay: 0s;
+}
+.fd.open .fd-card:hover,
+.fd.open .fd-card:focus-visible {
+  z-index: 6;
+  transform: translate(-50%, -50%) translate(var(--fd-x), calc(var(--fd-y) - 25px)) rotate(0deg) scale(1.06);
+  transition-delay: 0s;
+}
+/* Desktop: the folder stays small, but the posters that come out grow to a readable size.
+   They fan mostly to the left so the right-hand one stays on screen. */
+@media (min-width: 721px) {
+  .fd.open .fd-card {
+    width: 240px;
+    border-radius: 16px;
+  }
+  .fd.open .fd-card-1 {
+    --fd-x: 14px;
+    --fd-y: -300px;
+    --fd-r: 9deg;
+  }
+  .fd.open .fd-card-2 {
+    --fd-x: -136px;
+    --fd-y: -320px;
+    --fd-r: -2deg;
+  }
+  .fd.open .fd-card-3 {
+    --fd-x: -286px;
+    --fd-y: -295px;
+    --fd-r: -10deg;
+  }
+}
+.fd-flap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  margin-top: 16px;
+  width: 321px;
+  height: 241px;
+  transform: translate(-50%, -50%) rotateX(-15deg);
+  transform-origin: bottom center;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+.fd.open .fd-flap {
+  transform: translate(-50%, -50%) rotateX(-55deg);
+}
+@media (hover: hover) {
+  .fd:not(.open):hover .fd-card-1 {
+    transform: translate(-50%, -50%) translate(40px, -30px) rotate(14deg);
+    transition-delay: 0.12s;
+  }
+  .fd:not(.open):hover .fd-card-2 {
+    transform: translate(-50%, -50%) translate(3px, -35px) rotate(-1deg);
+    transition-delay: 0.06s;
+  }
+  .fd:not(.open):hover .fd-card-3 {
+    transform: translate(-50%, -50%) translate(-40px, -44px) rotate(-9deg);
+    transition-delay: 0s;
+  }
+  .fd:not(.open):hover .fd-flap {
+    transform: translate(-50%, -50%) rotateX(-45deg);
+  }
+}
+.fd-flap-blur {
+  position: absolute;
+  inset: 0;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.fd-flap svg {
+  position: absolute;
+  inset: 0;
+}
+.fd-label {
+  position: absolute;
+  left: 26px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  color: var(--t1);
+}
+/* Same amber as "Closing this week". */
+.fd-dot {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--last);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--last) 24%, transparent);
+}
+@media (max-width: 720px) {
+  .fd {
+    --fd-scale: 0.38;
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(14px, env(safe-area-inset-bottom));
   }
 }
 
