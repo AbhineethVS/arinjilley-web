@@ -3,7 +3,7 @@
 // saved posters; opened, it lists them with live countdowns, Register and Remove. With nothing saved yet it
 // falls back to the hackathons closing soonest, so it's never empty.
 import { boardStatus, deadlineInstant } from "@arinjilley/core";
-import { folderArt, folderCards } from "../shared/folder";
+import { folderCards } from "../shared/folder";
 import type { WebListing } from "../shared/listing";
 import { art, esc, icon } from "../shared/render";
 
@@ -206,9 +206,7 @@ export function setupFolder(listings: WebListing[], tick: () => void) {
       })
       .join("");
     const ics = mode === "saved" && items.some((h) => (closesAt(h) ?? 0) > now);
-    // Phones: the folder sits on the sheet's top edge; its posters rise out once it's open (see setOpen).
-    tray!.innerHTML = `<div class="tray-fd${isOpen() ? " lift" : ""}">${folderArt(posters, label)}</div>
-<div class="tray-h">
+    tray!.innerHTML = `<div class="tray-h">
   <div><b>${mode === "saved" ? "Your folder" : "Closing soon"}</b><span class="mono">${mode === "saved" ? `${items.length} SAVED` : "NEXT 3 DEADLINES"}</span></div>
   <button type="button" class="icon-btn" id="trayX" aria-label="Close">${icon("x")}</button>
 </div>
@@ -231,13 +229,7 @@ export function setupFolder(listings: WebListing[], tick: () => void) {
     scrim!.classList.toggle("on", open);
     toggle!.setAttribute("aria-expanded", String(open));
     pill!.setAttribute("aria-expanded", String(open));
-    if (open) {
-      tray!.querySelector<HTMLElement>(".ti-main, #trayX")?.focus({ preventScroll: true });
-      // Let the sheet land first, then open the flap and lift the posters out (phones; hidden on desktop).
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => tray!.querySelector(".tray-fd")?.classList.add("lift")),
-      );
-    }
+    if (open) tray!.querySelector<HTMLElement>(".ti-main, #trayX")?.focus({ preventScroll: true });
   }
 
   toggle.addEventListener("click", () => setOpen(!isOpen()));
