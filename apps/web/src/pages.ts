@@ -26,8 +26,9 @@ export interface PageCtx {
   groupUrl: string;
 }
 
-// Picks one accent per visit (per tab session), never the same as the previous visit. Runs before first paint.
-const ACCENT_SCRIPT = `(()=>{const A=["#C8F560","#7CC4FF","#B4A7FF","#FF7AA2","#FF8E72","#EDE6D6"];let a;try{a=sessionStorage.getItem("arj-accent");if(!A.includes(a)){const p=a||localStorage.getItem("arj-last-accent"),c=A.filter(x=>x!==p);a=c[Math.floor(Math.random()*c.length)];sessionStorage.setItem("arj-accent",a);localStorage.setItem("arj-last-accent",a)}}catch(e){a=A[0]}document.documentElement.style.setProperty("--accent",a);if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("tw")})();`;
+// Picks the accent before first paint: a new one for each new tab and on every reload (never the same as the
+// last), but kept while moving between pages in the same tab so the colour doesn't jump around.
+const ACCENT_SCRIPT = `(()=>{const A=["#C8F560","#7CC4FF","#B4A7FF","#FF7AA2","#FF8E72","#EDE6D6"];let a;try{const n=performance.getEntriesByType("navigation")[0];a=sessionStorage.getItem("arj-accent");if((n&&n.type==="reload")||!A.includes(a)){const p=a||localStorage.getItem("arj-last-accent"),c=A.filter(x=>x!==p);a=c[Math.floor(Math.random()*c.length)];sessionStorage.setItem("arj-accent",a);localStorage.setItem("arj-last-accent",a)}}catch(e){a=A[0]}document.documentElement.style.setProperty("--accent",a);if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("tw")})();`;
 
 /** JSON safe to put inside a <script> tag. */
 // (U+2028/U+2029 are valid in JSON but end a line in older JavaScript parsers, so they're escaped too.)

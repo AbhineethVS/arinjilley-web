@@ -229,21 +229,19 @@ button {
   position: sticky;
   top: 0;
   z-index: 30;
-  /* A dark bar washed with this visit's accent, frosted over whatever scrolls beneath it. */
-  background: color-mix(in srgb, color-mix(in srgb, var(--accent) 9%, #141417) 86%, transparent);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  backdrop-filter: blur(14px) saturate(1.4);
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  /* At the top of the page the bar is see-through, so it's one surface with the page (no line, no tint).
+     Once you scroll, it frosts over the content in the page's own colour, with a soft shadow instead of a border. */
+  background: transparent;
   transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
+    background-color 0.25s,
+    box-shadow 0.25s,
+    backdrop-filter 0.25s;
 }
 .top.scrolled {
-  border-bottom-color: color-mix(in srgb, var(--accent) 38%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 10px 30px -12px rgba(0, 0, 0, 0.7);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 12px 28px -18px rgba(0, 0, 0, 0.85);
 }
 .top .nav a[aria-current="page"] {
   background: color-mix(in srgb, var(--accent) 14%, var(--raised));
