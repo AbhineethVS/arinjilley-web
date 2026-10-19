@@ -1896,6 +1896,123 @@ html.lock .fd-pill {
   }
 }
 
+/* The folder's "soul" (phones): over the hero it's a ghost of itself (see-through, softly blurred, floating),
+   with an aura breathing behind it and wisps drifting up. client/saved.ts sets --soul from 1 (ghost, top of
+   the page) to 0 (solid, at the listings) as you scroll, so it materialises gradually. Sizes here are in the
+   folder's own drawing units (it's drawn at 321×270 and scaled down). */
+.fd-soul {
+  display: none;
+}
+@media (max-width: 720px) {
+  .fd {
+    --soul: 0;
+  }
+  .fd-stage {
+    opacity: calc(1 - var(--soul) * 0.6);
+    filter: blur(calc(var(--soul) * 1.4px)) saturate(calc(1 - var(--soul) * 0.5));
+  }
+  .fd.soul .fd-stage {
+    animation: soul-float 3.6s ease-in-out infinite;
+  }
+  .fd-soul {
+    display: block;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--soul);
+  }
+  /* The aura: a soft glow in the accent colour, breathing. */
+  .fd-soul::before {
+    content: "";
+    position: absolute;
+    inset: -70px -60px -50px;
+    border-radius: 50%;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--accent) 55%, transparent),
+      color-mix(in srgb, var(--accent) 18%, transparent) 55%,
+      transparent
+    );
+    filter: blur(18px);
+  }
+  .fd.soul .fd-soul::before {
+    animation: soul-breathe 3.6s ease-in-out infinite;
+  }
+  /* The wisps: small glowing motes that rise from the folder and fade. */
+  .fd-soul i {
+    position: absolute;
+    top: 30%;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 60%, #fff);
+    box-shadow: 0 0 24px 6px color-mix(in srgb, var(--accent) 70%, transparent);
+    opacity: 0;
+  }
+  .fd-soul i:nth-child(1) {
+    left: 22%;
+  }
+  .fd-soul i:nth-child(2) {
+    left: 52%;
+    width: 16px;
+    height: 16px;
+  }
+  .fd-soul i:nth-child(3) {
+    left: 76%;
+    width: 18px;
+    height: 18px;
+  }
+  .fd.soul .fd-soul i {
+    animation: soul-wisp 3.2s ease-out infinite;
+  }
+  .fd.soul .fd-soul i:nth-child(2) {
+    animation-delay: 1.1s;
+  }
+  .fd.soul .fd-soul i:nth-child(3) {
+    animation-delay: 2.1s;
+  }
+}
+@keyframes soul-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 calc(var(--soul) * -16px);
+  }
+}
+@keyframes soul-breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+@keyframes soul-wisp {
+  0% {
+    transform: translate(0, 40px) scale(0.6);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(18px, -170px) scale(0.2);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fd.soul .fd-stage,
+  .fd.soul .fd-soul::before,
+  .fd.soul .fd-soul i {
+    animation: none;
+  }
+}
+
 /* The tray: what's in the folder, readable. A popover above the folder; a bottom sheet on phones. */
 .tray {
   position: fixed;

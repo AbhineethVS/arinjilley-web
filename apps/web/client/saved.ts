@@ -287,20 +287,24 @@ export function setupFolder(listings: WebListing[], tick: () => void) {
     }).observe(hero);
     phone.addEventListener("change", update);
 
-    // Phones: smaller (70%) while the hero is on screen, growing smoothly to full size as you scroll down to the
-    // listings. Laptops keep their own sizing (the folder only appears there on hover).
+    // Phones: a ghost of itself over the hero (see-through, floating, with an aura and drifting wisps), which
+    // materialises as you scroll down to the listings. --soul goes 1 → 0 with the scroll; CSS does the rest.
+    // Laptops are unaffected (the folder only appears there on hover, away from the hero).
     let frame = 0;
     const resize = () => {
       frame = 0;
       if (!phone.matches) {
-        folder.style.scale = "";
+        folder.style.removeProperty("--soul");
+        folder.classList.remove("soul");
         return;
       }
       // Full size once the listings (the board) reach the top third of the screen.
       const board = document.getElementById("board");
       const end = board ? board.getBoundingClientRect().top + scrollY - innerHeight * 0.35 : 1;
       const progress = Math.min(1, Math.max(0, scrollY / Math.max(1, end)));
-      folder.style.scale = (0.7 + 0.3 * progress).toFixed(3);
+      const soul = 1 - progress;
+      folder.style.setProperty("--soul", soul.toFixed(3));
+      folder.classList.toggle("soul", soul > 0.01); // runs the float/aura animations only while ghostly
     };
     window.addEventListener(
       "scroll",

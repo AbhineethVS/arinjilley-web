@@ -166,6 +166,7 @@ function heroPosters(list: WebListing[], now: number): string {
 // by junaid_3671. Phones get a small pill instead. Both open the same tray.
 function folderShell(): string {
   return `<div class="fd away none" id="folder">
+  <span class="fd-soul" aria-hidden="true"><i></i><i></i><i></i></span>
   <button type="button" class="fd-toggle" id="folderBtn" aria-expanded="false" aria-controls="tray">Your folder</button>
   ${folderArt([], "SAVED", true)}
 </div>
