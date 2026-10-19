@@ -154,9 +154,9 @@ export const FIELDS: Record<string, FieldDef> = {
   label: {
     label: "Poster prize label",
     prompt:
-      "Send the short <b>prize label</b> for the poster (max 8 characters), e.g. <code>₹1L+</code> or <code>PS5</code>.",
+      "Send the short <b>prize label</b> for the poster (up to 16 characters; shorter looks bigger), e.g. <code>₹1L+</code>, <code>PS5</code> or <code>$17.5K credits</code>.",
     current: (h) => h.prizeShort ?? "not set",
-    apply: text("prizeShort", 8),
+    apply: text("prizeShort", 16),
     poster: true,
   },
   themes: {

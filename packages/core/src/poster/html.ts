@@ -69,7 +69,7 @@ export const POSTER_CSS = `
 .p-fields{display:flex;justify-content:space-between;gap:2cqw}
 .p-fields b{display:block;font-size:var(--fs,3cqw);letter-spacing:-.02em;margin-top:.5cqw;white-space:nowrap}
 .p-fields .hl b{background:var(--p-accent);color:var(--p-hl-ink,#111);padding:0 .8cqw;margin-left:-.8cqw}
-.p-prize{font-weight:700;font-size:4.6cqw;letter-spacing:-.04em;line-height:1;margin:1cqw 0 2.4cqw;white-space:nowrap}
+.p-prize{font-weight:700;font-size:4.6cqw;letter-spacing:-.04em;line-height:1;margin:1cqw 0 2.4cqw;white-space:nowrap}.p-prize.sm{font-size:3.3cqw;letter-spacing:-.03em}.p-prize.xs{font-size:2.6cqw;letter-spacing:-.02em;line-height:1.1;white-space:normal;overflow-wrap:anywhere}
 .p-due{font-weight:700;font-size:2.9cqw;margin-top:.6cqw}
 .p-bars{margin-top:auto;height:10cqw;background:repeating-linear-gradient(90deg,var(--p-paper-ink) 0 .35cqw,transparent .35cqw .7cqw,var(--p-paper-ink) .7cqw 1.4cqw,transparent 1.4cqw 1.75cqw,var(--p-paper-ink) 1.75cqw 1.95cqw,transparent 1.95cqw 2.6cqw)}
 .p-chips{display:flex;flex-wrap:wrap;gap:1.6cqw;margin-top:5cqw}
@@ -85,6 +85,10 @@ const PLANE =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path transform="rotate(90 12 12)" fill="currentColor" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>';
 
 /** The poster element (no <html> wrapper), sized by its container. */
+/** The prize label is up to 16 characters; longer ones get a smaller size so they fit the ticket stub. */
+const prizeSize = (label: string | null | undefined) =>
+  !label || label.length <= 8 ? "" : label.length <= 11 ? " sm" : " xs";
+
 export function posterMarkup(d: PosterData): string {
   const { theme: t, artwork } = resolveStyle(d.posterStyle);
   const words = d.title.trim().split(/\s+/);
@@ -135,7 +139,7 @@ export function posterMarkup(d: PosterData): string {
       </div>
     </div>
     <div class="p-stub">
-      <span class="p-lbl m">PRIZE</span><div class="p-prize">${esc(d.prizeShort ?? "—")}</div>
+      <span class="p-lbl m">PRIZE</span><div class="p-prize${prizeSize(d.prizeShort)}">${esc(d.prizeShort ?? "—")}</div>
       <span class="p-lbl m">${closes ? "CLOSES" : "STARTS"}</span><div class="p-due">${closes ? dayMonth(closes).toUpperCase() : d.start ? dayMonth(d.start.at).toUpperCase() : "—"}</div>
       <div class="p-bars"></div>
     </div>

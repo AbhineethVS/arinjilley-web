@@ -74,7 +74,7 @@ const FormSchema = z.object({
     .string()
     .max(PRIZE_MAX * 4)
     .transform((s) => normalizePrizeText(stripEmoji(s)) ?? ""),
-  prizeShort: text(8),
+  prizeShort: text(16),
   themes: z.string().max(500),
   registerUrl: z.string().max(500),
   moreInfoUrl: z.string().max(500),

@@ -171,7 +171,7 @@ Sorted by deadline (soonest first), ties broken by event start.
 Opening a hackathon: on laptops the panel slides in from the right edge (and back out on close); on phones the full-screen panel fades in and out. (A poster-morph transition was tried and dropped: it misbehaved after stepping with the arrows.)
 **Share** (panel top bar and the hackathon page): on phones the native share sheet with the poster attached and a short emoji message + link; on laptops it copies the message and link.
 The side panel is frosted glass (the board shows through, blurred) over a light scrim; on phones it's more opaque for reading.
-Poster → title → "by Organiser" → icon tiles: **Deadline · Dates · Location/Online · Team · Prize · Fee · Who can join** → countdown pill _"Registration closes in **2d 5h**"_ → **prizes** (several, or one long one, become a bullet list and the Prize tile shows the short label) → summary, how it works, themes. Admin page: Prizes is a large text box, one prize per line.
+Poster → title → "by Organiser" → icon tiles: **Deadline · Dates · Location/Online · Team · Prize · Fee · Who can join** → countdown pill _"Registration closes in **2d 5h**"_ → **prizes** (several, or one long one, become a bullet list and the Prize tile shows the short label) → summary, how it works, themes. Admin page: Prizes is a large text box, one prize per line. The poster prize label can be up to 16 characters; longer labels are set smaller on the poster (two lines at most).
 Actions: **Register ↗** (sticky at the bottom on mobile) · **Add deadline to Google Calendar** · Add event dates · Copy link / Share.
 Desktop side panel: ↑ ↓ to move to the next/previous hackathon, Esc to close.
 Link previews (WhatsApp, etc.) use the **poster** as the image.
