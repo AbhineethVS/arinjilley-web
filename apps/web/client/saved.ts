@@ -286,6 +286,31 @@ export function setupFolder(listings: WebListing[], tick: () => void) {
       update();
     }).observe(hero);
     phone.addEventListener("change", update);
+
+    // Phones: smaller (70%) while the hero is on screen, growing smoothly to full size as you scroll down to the
+    // listings. Laptops keep their own sizing (the folder only appears there on hover).
+    let frame = 0;
+    const resize = () => {
+      frame = 0;
+      if (!phone.matches) {
+        folder.style.scale = "";
+        return;
+      }
+      // Full size once the listings (the board) reach the top third of the screen.
+      const board = document.getElementById("board");
+      const end = board ? board.getBoundingClientRect().top + scrollY - innerHeight * 0.35 : 1;
+      const progress = Math.min(1, Math.max(0, scrollY / Math.max(1, end)));
+      folder.style.scale = (0.7 + 0.3 * progress).toFixed(3);
+    };
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!frame) frame = requestAnimationFrame(resize);
+      },
+      { passive: true },
+    );
+    phone.addEventListener("change", resize);
+    resize();
   } else {
     folder.classList.remove("away");
     pill.classList.remove("away");
