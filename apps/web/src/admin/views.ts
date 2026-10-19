@@ -231,7 +231,8 @@ export function editorView(admin: Admin, data: EditorData): string {
         <div class="row2">${field("teamMin", "Team size: min", inp("teamMin", 'type="number" min="1" max="50" inputmode="numeric" placeholder="1"'))}${field("teamMax", "Team size: max", inp("teamMax", 'type="number" min="1" max="50" inputmode="numeric" placeholder="4"'))}</div>
         ${field("eligibility", "Who can join", inp("eligibility", 'maxlength="120" placeholder="e.g. UG/PG students with a college ID"'))}
         <div class="row2">${field("feeText", "Fee", inp("feeText", 'maxlength="80" placeholder="e.g. Free, or ₹200 per team"'))}<div class="f"><label>&nbsp;</label><label class="check"><input type="checkbox" id="isFree"> Free to enter</label></div></div>
-        <div class="row2">${field("prizeText", "Prize", inp("prizeText", 'maxlength="120" placeholder="e.g. ₹1 Lakh prize pool"'))}${field("prizeShort", "Poster prize label", inp("prizeShort", 'maxlength="8" placeholder="₹1L+"'), "Max 8 characters. Filled automatically if empty.")}</div>
+        ${field("prizeText", "Prizes", area("prizeText", 5, 'maxlength="600" placeholder="One prize per line, e.g.\nWinner: ₹75,000\nRunner-up: ₹35,000\nSpecial awards for the best UI and best pitch"'), "One prize per line. Any text: amounts, gadgets, internships, swag.")}
+        <div class="row2">${field("prizeShort", "Poster prize label", inp("prizeShort", 'maxlength="8" placeholder="₹1L+"'), "Max 8 characters. Filled automatically if empty.")}<div></div></div>
         ${field("themes", "Themes", inp("themes", 'placeholder="AI, FinTech, Hardware"'), "Comma separated, up to 5.")}
       </section>
 

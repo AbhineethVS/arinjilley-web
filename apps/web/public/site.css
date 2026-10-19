@@ -2478,6 +2478,29 @@ html.lock .fd-pill {
   color: #d6d6db;
   line-height: 1.6;
 }
+.prizes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.prizes li {
+  position: relative;
+  padding-left: 20px;
+  color: #d6d6db;
+  line-height: 1.55;
+}
+.prizes li::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
 .how {
   list-style: none;
   padding: 0;

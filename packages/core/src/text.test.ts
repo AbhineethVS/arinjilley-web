@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { cleanMessage, extractUrls, stripEmoji, substantiveLength } from "./clean";
 import { parseDateInput, parseList, parseTeamInput, parseUrlInput } from "./parse";
-import { shortPrize } from "./prize";
+import { normalizePrizeText, prizeLines, shortPrize } from "./prize";
 import { formatIstInput, parseIst } from "./time";
 import type { Hackathon } from "./types";
 import { whatsappText } from "./whatsapp";
@@ -216,5 +216,27 @@ describe("whatsappText", () => {
     expect(text).toContain("⏳ *Registration:* open until seats fill, so apply early");
     expect(text).toContain("📍 *Where:* Online");
     expect(text).not.toMatch(/Team:|Fee:|Prize pool:|Tracks:|How it works/);
+  });
+});
+
+describe("prizes as points", () => {
+  it("splits one prize per line, and old semicolon lists", () => {
+    expect(prizeLines("Winner: ₹75,000\nRunner-up: ₹35,000")).toEqual([
+      "Winner: ₹75,000",
+      "Runner-up: ₹35,000",
+    ]);
+    expect(prizeLines("₹2L (1st), ₹1L (2nd); ₹10K each for top 10; internships")).toEqual([
+      "₹2L (1st), ₹1L (2nd)",
+      "₹10K each for top 10",
+      "internships",
+    ]);
+    expect(prizeLines("₹1 Lakh+ prize pool")).toEqual(["₹1 Lakh+ prize pool"]);
+    expect(prizeLines(null)).toEqual([]);
+  });
+  it("tidies pasted text: bullets, numbering and blank lines go", () => {
+    expect(normalizePrizeText("• Winner:  ₹75,000\n\n2) Runner-up ₹35,000\n- Swag  ")).toBe(
+      "Winner: ₹75,000\nRunner-up ₹35,000\nSwag",
+    );
+    expect(normalizePrizeText("   \n ")).toBeNull();
   });
 });

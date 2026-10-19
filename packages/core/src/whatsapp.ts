@@ -3,6 +3,7 @@
 // the group link. Emojis come from this template, never from the listing data, so every post looks the same.
 import { stripEmoji } from "./clean";
 import { teamText } from "./format";
+import { prizeLines } from "./prize";
 import { dateRange, deadlineInstant, fullDate } from "./time";
 import type { Hackathon } from "./types";
 
@@ -40,7 +41,9 @@ export function whatsappText(h: Hackathon, links: WhatsAppLinks): string {
   if (h.teamMin != null || h.teamMax != null) facts.push(`👥 *Team:* ${teamText(h)}`);
   if (h.eligibility) facts.push(`🎓 *Who can join:* ${clean(h.eligibility)}`);
   if (h.feeText || h.isFree) facts.push(`💸 *Fee:* ${clean(h.feeText) || "Free"}`);
-  if (h.prizeText) facts.push(`🏆 *Prize pool:* ${clean(h.prizeText)}`);
+  const prizes = prizeLines(h.prizeText).map(clean).filter(Boolean);
+  if (prizes.length === 1) facts.push(`🏆 *Prize pool:* ${prizes[0]}`);
+  else if (prizes.length > 1) facts.push("🏆 *Prizes:*", ...prizes.map((p) => `   • ${p}`));
   if (h.themes.length) facts.push(`💡 *Tracks:* ${h.themes.map(clean).join(", ")}`);
   lines.push("", ...facts);
 

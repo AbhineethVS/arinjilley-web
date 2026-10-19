@@ -3,6 +3,8 @@ import {
   cleanMessage,
   extractUrls,
   type Hackathon,
+  normalizePrizeText,
+  PRIZE_MAX,
   parseUrlInput,
   shortPrize,
   stripEmoji,
@@ -68,7 +70,10 @@ const FormSchema = z.object({
   eligibility: text(120),
   feeText: text(80),
   isFree: z.boolean(),
-  prizeText: text(120),
+  prizeText: z
+    .string()
+    .max(PRIZE_MAX * 4)
+    .transform((s) => normalizePrizeText(stripEmoji(s)) ?? ""),
   prizeShort: text(8),
   themes: z.string().max(500),
   registerUrl: z.string().max(500),

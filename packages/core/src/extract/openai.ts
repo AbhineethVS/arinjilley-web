@@ -111,7 +111,7 @@ Fields:
 - event_start / event_end: when the hackathon itself happens. For multi-round events, start = first dated round, end = the finale's last day.
 - team_min / team_max: "teams of up to 3" → null, 3; "solo or duo" → 1, 2; "solo" → 1, 1; "1–4" → 1, 4.
 - fee_text: the fee as stated, short (e.g. "Free", "Round 1 free, ₹800 per team for finalists"); null if not mentioned. is_free: true only if the post says registration or the first round is free; false if a fee applies from the start or no fee information is given.
-- prize_text: concise prize description (e.g. "₹1 Lakh+ prize pool", "Up to $25,000 per track"). prize_short: a label of at most 7 characters for a poster (e.g. "₹1L+", "₹2.25L", "$25K", "$1M", "PS5"), or null if there's no prize.
+- prize_text: the prizes, one per line (separate lines with "\n"), most important first, at most 6 lines. Keep each line short but complete: who gets what (e.g. "Winner: ₹75,000\nRunner-up: ₹35,000\nSpecial awards and VIP memberships"). A single prize is one line (e.g. "₹1 Lakh+ prize pool"). prize_short: a label of at most 7 characters for a poster (e.g. "₹1L+", "₹2.25L", "$25K", "$1M", "PS5"), or null if there's no prize.
 - themes: up to 5 short Title Case tags for tracks or domains (e.g. "AI", "FinTech", "Hardware").
 - register_url: the registration or application link, chosen from the provided URLs only; null if none. more_info_url: another provided URL with more details, or null.
 - eligibility: who can take part, short (e.g. "UG/PG students with a college ID").`;

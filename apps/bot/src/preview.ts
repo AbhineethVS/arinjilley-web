@@ -8,6 +8,7 @@ import {
   type Hackathon,
   hostOf,
   MODE_LABEL,
+  prizeLines,
   teamText,
   whatsappText,
 } from "@arinjilley/core";
@@ -28,6 +29,13 @@ export function listingWarnings(h: Hackathon, extractedBy?: string | null): stri
   if (h.deadline && deadlineInstant(h.deadline) < Date.now()) w.push("The deadline has already passed.");
   if (!h.deadline && !h.start) w.push("No deadline or dates: it'll stay listed until you remove it.");
   return w;
+}
+
+/** One prize inline; several as a bulleted list under the label. */
+function prizeHtml(text: string | null, dash: string): string {
+  const p = prizeLines(text);
+  if (!p.length) return dash;
+  return p.length === 1 ? esc(p[0]!) : `\n${p.map((x) => `  • ${esc(x)}`).join("\n")}`;
 }
 
 export function previewText(h: Hackathon, extra: string[] = [], extractedBy?: string | null): string {
@@ -58,7 +66,7 @@ export function previewText(h: Hackathon, extra: string[] = [], extractedBy?: st
   lines.push(`<b>Who can join:</b> ${h.eligibility ? esc(h.eligibility) : dash}`);
   lines.push(`<b>Fee:</b> ${h.feeText ? esc(h.feeText) : h.isFree ? "Free" : dash}`);
   lines.push(
-    `<b>Prize:</b> ${h.prizeText ? esc(h.prizeText) : dash}${h.prizeShort ? ` <i>(poster: ${esc(h.prizeShort)})</i>` : ""}`,
+    `<b>Prize:</b> ${prizeHtml(h.prizeText, dash)}${h.prizeShort ? ` <i>(poster: ${esc(h.prizeShort)})</i>` : ""}`,
   );
   lines.push(`<b>Themes:</b> ${h.themes.length ? esc(h.themes.join(", ")) : dash}`);
   lines.push(

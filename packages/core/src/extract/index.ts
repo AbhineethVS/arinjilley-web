@@ -6,7 +6,7 @@ import type { AiSettings } from "../ai/settings";
 import { stripEmoji } from "../clean";
 import type { ListingFields } from "../db/map";
 import { parseDateInput } from "../parse";
-import { shortPrize } from "../prize";
+import { normalizePrizeText, shortPrize } from "../prize";
 import { type DateField, parseIst } from "../time";
 import type { Mode } from "../types";
 import { type AiUsage, extractWithOpenAI, type RawExtraction } from "./openai";
@@ -117,7 +117,7 @@ function normalise(
       eligibility: r.eligibility,
       feeText: r.fee_text,
       isFree: r.is_free,
-      prizeText: r.prize_text,
+      prizeText: normalizePrizeText(r.prize_text),
       prizeShort,
       themes: r.themes,
       registerUrl,

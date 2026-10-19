@@ -2,6 +2,7 @@
 import {
   formatIstInput,
   type Hackathon,
+  normalizePrizeText,
   parseDateInput,
   parseList,
   parseTeamInput,
@@ -139,13 +140,14 @@ export const FIELDS: Record<string, FieldDef> = {
   prize: {
     label: "Prize",
     prompt:
-      "Send the <b>prize</b>, e.g. <code>₹1 Lakh prize pool</code>. The poster label is worked out from it.",
+      "Send the <b>prizes</b>, one per line, e.g.\n<code>Winner: ₹75,000\nRunner-up: ₹35,000</code>\nThe poster label is worked out from it.",
     current: (h) => h.prizeText ?? "not set",
     apply: (input, h) => {
-      const r = text("prizeText", 120)(input);
-      if ("error" in r) return r;
-      const v = r.fields.prizeText as string | null;
-      return { fields: { prizeText: v, prizeShort: shortPrize(v) ?? (v ? h.prizeShort : null) } };
+      if (CLEAR.test(input)) return { fields: { prizeText: null, prizeShort: null } };
+      // Several lines are fine here: one prize per line.
+      const v = normalizePrizeText(stripEmoji(input));
+      if (!v) return { error: "That was empty. Send some text, or /cancel." };
+      return { fields: { prizeText: v, prizeShort: shortPrize(v) ?? h.prizeShort } };
     },
     poster: true,
   },

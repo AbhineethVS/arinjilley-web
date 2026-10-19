@@ -14,6 +14,7 @@ import {
   istParts,
   MODE_LABEL,
   MONTHS,
+  prizeLines,
   STATUS_LABEL,
   teamText,
   time12,
@@ -461,6 +462,13 @@ export function detailHtml(h: WebListing, now: number, opts: { shareUrl?: string
     h.mode === "online"
       ? `<div class="row"><div class="ibox">${icon("globe-simple")}</div><div><b>Online</b><span class="sub">${esc(h.venue ?? "Take part from anywhere")}</span></div></div>`
       : `<div class="row"><div class="ibox">${icon("map-pin")}</div><div><b>${esc(h.city ?? MODE_LABEL[h.mode])}${h.mode === "hybrid" ? " · Hybrid" : ""}</b><span class="sub">${esc(h.venue ?? "Venue to be announced")}</span></div></div>`;
+  // Prizes: a short one fits in its tile; several (or a long one) become a bullet list further down, and the
+  // tile shows the short label instead.
+  const prizes = prizeLines(h.prizeText);
+  const prizeAsList = prizes.length > 1 || (prizes[0]?.length ?? 0) > 40;
+  const prizeTile = prizeAsList
+    ? (h.prizeShort ?? (prizes.length > 1 ? `${prizes.length} prizes` : "See below"))
+    : (prizes[0] ?? null);
   const fact = (ic: string, b: string | null, label: string) =>
     b
       ? `<div class="row"><div class="ibox">${icon(ic)}</div><div><b>${esc(b)}</b><span class="sub">${label}</span></div></div>`
@@ -507,7 +515,7 @@ ${h.organiser ? `<div class="d-by"><span class="av">${icon("buildings")}</span>b
 <div class="rows">${deadlineRow}${datesRow}${whereRow}</div>
 <div class="grid2">
   ${fact("users", h.teamMin != null || h.teamMax != null ? teamText(h) : null, "Team size")}
-  ${fact("trophy", h.prizeText, "Prizes")}
+  ${fact("trophy", prizeTile, "Prizes")}
   ${fact("ticket", h.feeText ?? (h.isFree ? "Free" : null), "Entry fee")}
   ${fact("graduation-cap", h.eligibility, "Who can join")}
 </div>
@@ -522,6 +530,7 @@ ${link(dl, "alarm", "Add deadline")}
     ${link(ev, "calendar-plus", "Add event dates")}
   </div>
 </div>
+${prizeAsList ? `<div class="psec"><h4>PRIZES</h4><ul class="prizes">${prizes.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div>` : ""}
 ${h.summary ? `<div class="psec"><h4>ABOUT</h4><p>${esc(h.summary)}</p></div>` : ""}
 ${h.howItWorks.length ? `<div class="psec"><h4>HOW IT WORKS</h4><ol class="how">${h.howItWorks.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div>` : ""}
 ${h.themes.length ? `<div class="psec"><h4>THEMES</h4><div class="tags">${h.themes.map((t) => `<span>${esc(t)}</span>`).join("")}</div></div>` : ""}

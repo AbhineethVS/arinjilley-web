@@ -35,6 +35,37 @@ const AMOUNT =
   /(₹|rs\.?|inr|\$|usd)\s*([\d,]+(?:\.\d+)?)\s*(k|thousand|lakhs?|lacs?|l|crores?|cr|million|mn|m)?\b(\s*\+)?|([\d,]+(?:\.\d+)?)\s*(k|lakhs?|lacs?|l|crores?|cr|million|mn|m)?\s*(₹|rs\.?|inr|usd|dollars)\b/i;
 
 /** Best-effort short label from a prize description; null if no amount is found. */
+/** Max length of the stored prize text (one prize per line). */
+export const PRIZE_MAX = 600;
+
+/**
+ * The prizes as separate points. Stored one per line; older listings used "; " between prizes on one line,
+ * so a single line is split on semicolons too.
+ */
+export function prizeLines(text: string | null | undefined): string[] {
+  if (!text) return [];
+  const lines = text.includes("\n") ? text.split(/\r?\n/) : text.split(/\s*;\s+/);
+  return lines
+    .map((l) => l.replace(/^\s*(?:[-•*·]|\d+[.)])\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 10);
+}
+
+/** Tidies typed/pasted prize text: one prize per line, spaces collapsed, bullets removed, length capped. */
+export function normalizePrizeText(text: string | null | undefined): string | null {
+  const lines = (text ?? "")
+    .split(/\r?\n/)
+    .map((l) =>
+      l
+        .replace(/^\s*(?:[-•*·]|\d+[.)])\s*/, "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
+    .filter(Boolean);
+  const out = lines.join("\n").slice(0, PRIZE_MAX).trim();
+  return out || null;
+}
+
 export function shortPrize(text: string | null | undefined): string | null {
   if (!text) return null;
   const m = AMOUNT.exec(text);
