@@ -121,7 +121,6 @@ function footer(ctx: PageCtx): string {
     <a href="/about">ABOUT</a>
     <button class="install-btn" data-install hidden>INSTALL APP</button>
   </nav>
-  <p class="credit"><span class="credit-t">Built with <span class="heart" aria-label="love">${icon("heart-fill")}</span> by <a href="https://github.com/AbhineethVS" target="_blank" rel="noopener">Abhineeth V S</a></span></p>
 </footer>`;
 }
 
